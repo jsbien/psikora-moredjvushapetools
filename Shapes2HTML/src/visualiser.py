@@ -20,9 +20,13 @@ page_types = ["database", "document", "dictionary", "shape"]
 
 extension = {"shape":".png"}
 
-def path_to_file(index, page_type):
+def path_to_file(index, page_type, subdir = None):
     assert page_type in page_types
-    return page_folder + os.sep + page_type + '_' + str(index) + extension.get(page_type, ".xhtml")
+    retval = page_folder + os.sep 
+    if subdir:
+        retval += subdir + os.sep
+    retval += page_type + '_' + str(index) + extension.get(page_type, ".xhtml")
+    return retval 
 
 def make_page(page_title, page_type, data):
     xhtml_page = '''
@@ -69,6 +73,7 @@ def make_page(page_title, page_type, data):
     elif page_type == "dictionary":
         xhtml_page += "<table border=\"1\" cellpadding=\"10\">"
         xhtml_page += "<th>Shape #</th>"
+        xhtml_page += "<th>Id in document</th>"
         xhtml_page += "<th>Image</th>"
         xhtml_page += "<th>Parent #</th>"
         xhtml_page += "<th>Bounding box left</th>"
@@ -77,10 +82,11 @@ def make_page(page_title, page_type, data):
         xhtml_page += "<th>Bounding box right</th>"
         
         
-        for sh_id, parent_id, _, width, height, _, bbox_top, bbox_left, bbox_right, bbox_bottom in data:
+        for sh_id, original_id, parent_id, _, width, height, dict_id, bbox_top, bbox_left, bbox_right, bbox_bottom in data:
             xhtml_page += "<tr>"
             xhtml_page += "<td>" + str(sh_id) + "</td>"
-            xhtml_page += "<td>" + "<img src=\".." + os.sep + path_to_file(sh_id,"shape") + "\" width=\"" + str(width) + "\" height=\"" + str(height) + "\" />" + "</td>"
+            xhtml_page += "<td>" + str(original_id) + "</td>"
+            xhtml_page += "<td>" + "<img src=\".." + os.sep + path_to_file(sh_id,"shape", subdir = "dictionary_" + str(dict_id)) + "\" width=\"" + str(width) + "\" height=\"" + str(height) + "\" />" + "</td>"
             if parent_id < 0:
                 parent = "no parent"
             else:
@@ -120,11 +126,11 @@ def behead(pbm, width, height):
 
 def save_image_file(shape_row):
     #id, parent_id, bits, width, height, dictionary_id, bbox_top, bbox_left, bbox_right, bbox_bottom"
-    index, _, bits, width, height, _, _, _, _, _ = shape_row 
+    index, _, _, bits, width, height, dict_id, _, _, _, _ = shape_row 
     imagebits = behead(bits, width, height)
     size = width, height
     image = Image.fromstring("1", size, imagebits, "raw", "1;I", 0, 1)
-    image.save(path_to_file(index, "shape"),"png");
+    image.save(path_to_file(index, "shape", subdir = "dictionary_"+str(dict_id)),"png");
      
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Creates a xhtml page presenting the contents of a DjVu shape database.', conflict_handler='resolve')
@@ -172,6 +178,9 @@ if __name__ == '__main__':
                     filename = path_to_file(dict_id, "dictionary")
                     f = open(filename, 'w')
                     f.write(xhtml)
+                    dictionary_folder = page_folder+os.sep+"dictionary_" + str(dict_id)
+                    if not os.path.exists(dictionary_folder):  
+                        os.mkdir(dictionary_folder)
                     for shape_row in shape_data:
                         save_image_file(shape_row)
 
