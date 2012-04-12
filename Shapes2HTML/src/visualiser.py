@@ -4,7 +4,7 @@
 '''
 Created on Mar 9, 2012
 
-@author: zasvid
+@author: Piotr Sikora
 '''
 
 import MySQLdb as mdb
