@@ -3,7 +3,6 @@ Created on Apr 17, 2012
 
 @author: zasvid
 '''
-
 class LabellerData():
     
     def __init__(self):
@@ -33,5 +32,5 @@ class LabellerData():
             else:
                 shape.parent = self.shape_translation[shape.parent_db_id]
                 shape.parent.children.append(shape)
-    
+
     

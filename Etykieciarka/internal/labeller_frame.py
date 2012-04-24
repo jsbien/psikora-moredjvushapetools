@@ -78,22 +78,23 @@ class Labeller(wx.Frame):
             del self.db_manipulator
         self.db_manipulator = DatabaseManipulator(db_name, db_host, db_user, db_pass)
         self.data.documents = self.db_manipulator.fetch_documents()
-        #TODO: temporary test
-        self.data.current_document = self.data.documents[0]
-        self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
-        self.data.current_dictionary = self.data.shape_dictionaries[0]
-        self.data.fill_shape_dicitonary(self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id))
-        self.roots_panel.regenerate()
 
     def OnChooseDocument(self, event):
+        self.choose_document()
+        
+    def choose_document(self):
         dialog = ChooseDocumentDialog(self.data, None, title='Wybierz dokument z bazy')
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_document is not None:
             self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
+        return (self.data.current_document is not None)
         #TODO: use Observers to observe when document changes (or at least check for change here)
         
     def OnChooseDictionary(self, event):
+        self.choose_dictionary()
+        
+    def choose_dictionary(self):
         dialog = ChooseDictionaryDialog(self.data, None, title='Wybierz słownik kształtów z bazy')
         dialog.ShowModal()
         dialog.Destroy()
@@ -107,6 +108,21 @@ class Labeller(wx.Frame):
         self.Destroy()
             
     def OnExit(self, event):
+        """ This method is called when exiting the application
+            via menu or closing the application window.
+        """
         if hasattr(self,'db_manipulator'):
             self.db_manipulator.close()
+        # save the session
+        self.save_session()
         event.Skip()
+        
+    def save_session(self):
+        pass
+
+    def load_session(self):
+        pass
+    
+    def load_last_session(self):
+        if self.choose_document():
+            self.choose_dictionary()  

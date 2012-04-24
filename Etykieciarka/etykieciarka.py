@@ -27,4 +27,5 @@ if __name__ == '__main__':
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = Labeller() # A Frame is a top-level window.
     frame.connect_to_database(db_name, db_host, db_user, db_pass)
+    frame.load_last_session()
     app.MainLoop()
