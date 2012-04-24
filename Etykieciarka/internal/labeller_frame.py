@@ -99,7 +99,7 @@ class Labeller(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_dictionary is not None:
-            self.data.fill_shape_dicitonary(self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id))
+            self.data.fill_shape_dictionary(self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id))
         self.roots_panel.regenerate()
             
     def OnQuit(self, event):
@@ -124,5 +124,15 @@ class Labeller(wx.Frame):
         pass
     
     def load_last_session(self):
-        if self.choose_document():
-            self.choose_dictionary()  
+        #TODO: temporary test
+        self.data.current_document = self.data.documents[0]
+        self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
+        self.data.current_dictionary = self.data.shape_dictionaries[0]
+        self.data.fill_shape_dictionary(self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id))
+        self.data.current_hierarchy = self.data.shape_hierarchies[0]
+        self.data.current_shape = self.data.shape_hierarchies[0]
+        self.roots_panel.regenerate()
+        self.hierarchy_panel.regenerate()
+        self.label_panel.regenerate()
+        #if self.choose_document():
+         #   self.choose_dictionary()  

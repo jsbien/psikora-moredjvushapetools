@@ -40,18 +40,18 @@ class RootPanel(wx.Panel):
         imagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnClick)
         
     def OnClick(self, event):
-        self.parent.data.current_hierarchy = self.shape
-        if self.parent.currently_selected_subpanel is not None:
-            self.parent.currently_selected_subpanel.deselect()
-        self.parent.currently_selected_subpanel = self 
         self.select()
-        self.parent.target_panel.regenerate()
 
     def deselect(self):
         self.SetBackgroundColour(wx.NullColor)
         
     def select(self):
         self.SetBackgroundColour('#00ff00')
+        self.parent.data.current_hierarchy = self.shape
+        if self.parent.currently_selected_subpanel is not None:
+            self.parent.currently_selected_subpanel.deselect()
+        self.parent.currently_selected_subpanel = self 
+        self.parent.target_panel.regenerate()
 
 class RootsPanel(wx.lib.scrolledpanel.ScrolledPanel):
     
@@ -85,5 +85,10 @@ class RootsPanel(wx.lib.scrolledpanel.ScrolledPanel):
         self.SetSizer(sizer, True)
         return sizer
 
+    def select(self, shape):
+        for panel in self.root_panels:
+            if panel.shape.db_id == shape.db_id:
+                panel.select()
+                break
         
         

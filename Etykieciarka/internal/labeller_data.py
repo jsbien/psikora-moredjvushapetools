@@ -16,7 +16,7 @@ class LabellerData():
         self.shape_translation = {}
         self.current_shape = None
         
-    def fill_shape_dicitonary(self, shapes):
+    def fill_shape_dictionary(self, shapes):
         self.shapes = shapes
         for i in range(len(self.shapes)):
             shape = self.shapes[i]
