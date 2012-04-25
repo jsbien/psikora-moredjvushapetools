@@ -52,13 +52,14 @@ class HierarchyPanel(wx.lib.scrolledpanel.ScrolledPanel):
         for panel in self.shape_panels:
             panel.Destroy()
         self.shape_panels = []
-        hierarchy = self.data.current_hierarchy.linearise_hierarchy()
-        for i in range(len(hierarchy)):
-            shapepanel = ShapePanel(self, hierarchy[i])
-            sizer.Add(shapepanel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
-            sizer.AddSpacer(5)
-            self.shape_panels.append(shapepanel)
-        sizer.AddStretchSpacer()
+        if self.data.current_hierarchy is not None:
+            hierarchy = self.data.current_hierarchy.linearise_hierarchy()
+            for i in range(len(hierarchy)):
+                shapepanel = ShapePanel(self, hierarchy[i])
+                sizer.Add(shapepanel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+                sizer.AddSpacer(5)
+                self.shape_panels.append(shapepanel)
+            sizer.AddStretchSpacer()
         self.SetupScrolling(scroll_y = False)
         self.Refresh()
         self.Update()

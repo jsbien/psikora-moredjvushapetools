@@ -58,8 +58,8 @@ class Labeller(wx.Frame):
         
         innerSizer = wx.BoxSizer(wx.VERTICAL)
         
-        innerSizer.Add(self.roots_panel,1, wx.EXPAND | wx.ALL, 5)
-        innerSizer.Add(self.hierarchy_panel,5, wx.EXPAND | wx.ALL, 5)
+        innerSizer.Add(self.roots_panel,2, wx.EXPAND | wx.ALL, 5)
+        innerSizer.Add(self.hierarchy_panel,3, wx.EXPAND | wx.ALL, 5)
         
         mainSizer.Add(innerSizer, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.AddSpacer((5,5))
@@ -83,14 +83,26 @@ class Labeller(wx.Frame):
         self.choose_document()
         
     def choose_document(self):
+        previous_document = self.data.current_document
         dialog = ChooseDocumentDialog(self.data, None, title='Wybierz dokument z bazy')
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_document is not None:
             self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
+        #reset data after document change
+        if self.data.current_document != previous_document:
+            self.data.current_dictionary = None
+            self.data.shape_hierarchies = []
+            self.data.current_hierarchy = None
+            self.data.current_shape = None
+            self.label_panel.regenerate()
+            self.roots_panel.regenerate()
+            self.hierarchy_panel.regenerate()
         return (self.data.current_document is not None)
         #TODO: use Observers to observe when document changes (or at least check for change here)
-        
+
+    
+
     def OnChooseDictionary(self, event):
         self.choose_dictionary()
         

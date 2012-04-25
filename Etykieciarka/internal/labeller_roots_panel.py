@@ -70,11 +70,11 @@ class RootsPanel(wx.lib.scrolledpanel.ScrolledPanel):
         for hierarchy_root in self.data.shape_hierarchies:
             panel = RootPanel(self, hierarchy_root)
             self.root_panels.append(panel)
-            sizer.Add(panel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+            sizer.Add(panel, 0, wx.ALL | wx.ALIGN_TOP, 5)
             sizer.AddSpacer(5)
         sizer.AddStretchSpacer()
         self.SetSizer(sizer, True)
-        self.SetupScrolling(scroll_y = False)
+        self.SetupScrolling()
         self.Refresh()
         self.Update()
     
