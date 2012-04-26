@@ -2,7 +2,7 @@
 '''
 Created on Apr 18, 2012
 
-@author: zasvid
+@author: Piotr Sikora
 '''
 
 import wx

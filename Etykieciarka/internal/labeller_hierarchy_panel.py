@@ -5,13 +5,12 @@ Created on Apr 18, 2012
 @author: zasvid
 '''
 
+import wx
 
 import wx.grid
 from os import sep
 import wx.lib.scrolledpanel
 from utils import get_wx_image
-
-
 
 class ShapePanel(wx.Panel):
     def __init__(self, parent, shape):

@@ -83,11 +83,21 @@ class Labeller(wx.Frame):
         self.choose_document()
         
     def choose_document(self):
+        previous_document = self.data.current_document
         dialog = ChooseDocumentDialog(self.data, None, title='Wybierz dokument z bazy')
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_document is not None:
             self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
+        #reset data after document change
+        if self.data.current_document != previous_document:
+            self.data.current_dictionary = None
+            self.data.shape_hierarchies = []
+            self.data.current_hierarchy = None
+            self.data.current_shape = None
+            self.label_panel.regenerate()
+            self.roots_panel.regenerate()
+            self.hierarchy_panel.regenerate()
         return (self.data.current_document is not None)
         #TODO: use Observers to observe when document changes (or at least check for change here)
         
