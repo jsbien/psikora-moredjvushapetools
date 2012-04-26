@@ -77,3 +77,19 @@ class Shape:
         for child in self.children:
             linearised_hierarchy.extend(child.linearise_hierarchy())
         return linearised_hierarchy
+    
+    def depth(self):
+        max_depth = 1
+        for child in self.children:
+            if child.depth() + 1 > max_depth:
+                max_depth = child.depth() + 1
+        return max_depth
+    
+    def max_width(self):
+        childwidth = 0
+        for child in self.children:
+            childwidth += child.max_width()
+        if childwidth > 1:
+            return childwidth
+        else:
+            return 1

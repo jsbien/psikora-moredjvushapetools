@@ -74,7 +74,8 @@ class RootsPanel(wx.lib.scrolledpanel.ScrolledPanel):
             sizer.AddSpacer(5)
         sizer.AddStretchSpacer()
         self.SetSizer(sizer, True)
-        self.SetupScrolling(scroll_y = False)
+        #self.SetupScrolling(scroll_y = False)
+        self.SetupScrolling()
         self.Refresh()
         self.Update()
     
