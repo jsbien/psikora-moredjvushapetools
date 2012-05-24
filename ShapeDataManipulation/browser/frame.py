@@ -4,19 +4,19 @@
 '''
 
 import wx
-from database_manipulation import DatabaseManipulator
-from internal.labeller_dialogs import *
-from internal.labeller_data import LabellerData
-from internal.labeller_hierarchy_panel import *
-from internal.labeller_roots_panel import *
-from internal.labeller_label_panel import *
+from internal.database_manipulation import DatabaseManipulator
+from dialogs import *
+from internal.data import ShapeData
+from shapes_panel import ShapesPanel 
+from roots_panel import RootsPanel
+from label_panel import LabelPanel
 
-class Labeller(wx.Frame):
+class ShapeBrowser(wx.Frame):
     
-    def __init__(self):
-        self.data = LabellerData()
-        
-        wx.Frame.__init__(self, None, wx.ID_ANY, "Etykieciarka")
+    def __init__(self, *args, **kwargs):
+        wx.Frame.__init__(self, *args, **kwargs)
+
+        self.data = ShapeData()
         
         # binding general behaviour
         self.Bind(wx.EVT_CLOSE, self.OnExit)
@@ -24,7 +24,7 @@ class Labeller(wx.Frame):
         #building a menu
         menubar = wx.MenuBar()
         
-        #first menu - database
+        # menu - database
         menu = wx.Menu()
         
         menuitem = menu.Append(wx.ID_EXIT, '&Wyjście', 'Wyjdź z programu')
@@ -39,6 +39,20 @@ class Labeller(wx.Frame):
         
         menubar.Append(menu, '&Baza')
         
+        # menu - database
+        menu = wx.Menu()
+        
+        menuitem = menu.Append(wx.ID_ANY, '&Wyłącz sortowanie', 'Wyłącza sortowanie korzeni hierarchii kształtów')
+        self.Bind(wx.EVT_MENU, self.SortRootsNone, menuitem)
+        
+        menuitem = menu.Append(wx.ID_ANY, 'Sortowanie wg &rozmiaru', 'Sortuje korzenie hierarchii kształtów wg rozmiaru kształtu')
+        self.Bind(wx.EVT_MENU, self.SortRootsSize, menuitem)
+        
+        menuitem = menu.Append(wx.ID_ANY, 'Sortowanie wg &liczebności', 'Sortuje korzenie hierarchii kształtów wg liczebności hierarchii')
+        self.Bind(wx.EVT_MENU, self.SortRootsCount, menuitem)
+        
+        menubar.Append(menu, '&Hierarchie')
+        
         #Help menu
         #menu = wx.Menu()
         
@@ -50,16 +64,16 @@ class Labeller(wx.Frame):
         
         self.SetSize((1024, 768))
         
-        self.label_panel = LabelPanel(self, self.data)
-        self.hierarchy_panel = HierarchyPanel(self, self.data, self.label_panel)
-        self.roots_panel = RootsPanel(self, self.data, self.hierarchy_panel)
+        self.label_panel = LabelPanel(parent = self, data = self.data)
+        self.shapes = ShapesPanel(data = self.data, target_panel = self.label_panel, parent = self)
+        self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panel = self.shapes)
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         
         innerSizer = wx.BoxSizer(wx.VERTICAL)
         
         innerSizer.Add(self.roots_panel,1, wx.EXPAND | wx.ALL, 5)
-        innerSizer.Add(self.hierarchy_panel,5, wx.EXPAND | wx.ALL, 5)
+        innerSizer.Add(self.shapes,5, wx.EXPAND | wx.ALL, 5)
         
         mainSizer.Add(innerSizer, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.AddSpacer((5,5))
@@ -67,12 +81,20 @@ class Labeller(wx.Frame):
         
         self.SetSizer(mainSizer)
         
-        #global binding of keystrokes
-        
+        #TODO: global binding of keystrokes
         
         self.Centre()
         self.Show(True)
         
+    def SortRootsNone(self, event):
+        self.roots_panel.set_hierarchy_sorting_method(None)
+        
+    def SortRootsCount(self, event):
+        self.roots_panel.set_hierarchy_sorting_method("count")
+        
+    def SortRootsSize(self, event):
+        self.roots_panel.set_hierarchy_sorting_method("size")
+    
     def connect_to_database(self, db_name, db_host, db_user, db_pass):
         if hasattr(self,'db_manipulator'):
             del self.db_manipulator
@@ -84,7 +106,7 @@ class Labeller(wx.Frame):
         
     def choose_document(self):
         previous_document = self.data.current_document
-        dialog = ChooseDocumentDialog(self.data, None, title='Wybierz dokument z bazy')
+        dialog = ChooseDocumentDialog(data = self.data, title='Wybierz dokument z bazy', parent = None)
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_document is not None:
@@ -97,7 +119,7 @@ class Labeller(wx.Frame):
             self.data.current_shape = None
             self.label_panel.regenerate()
             self.roots_panel.regenerate()
-            self.hierarchy_panel.regenerate()
+            self.shapes.regenerate()
         return (self.data.current_document is not None)
         #TODO: use Observers to observe when document changes (or at least check for change here)
         
@@ -105,7 +127,7 @@ class Labeller(wx.Frame):
         self.choose_dictionary()
         
     def choose_dictionary(self):
-        dialog = ChooseDictionaryDialog(self.data, None, title='Wybierz słownik kształtów z bazy')
+        dialog = ChooseDictionaryDialog(data = self.data, parent = None, title='Wybierz słownik kształtów z bazy')
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_dictionary is not None:
@@ -142,7 +164,7 @@ class Labeller(wx.Frame):
         self.data.current_hierarchy = self.data.shape_hierarchies[0]
         self.data.current_shape = self.data.shape_hierarchies[0]
         self.roots_panel.regenerate()
-        self.hierarchy_panel.regenerate()
+        self.shapes.regenerate()
         self.label_panel.regenerate()
         #if self.choose_document():
          #   self.choose_dictionary()  

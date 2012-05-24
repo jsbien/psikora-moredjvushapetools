@@ -6,9 +6,10 @@
 import Image
 
 class Document:
-    def __init__(self, db_id, name):
+    def __init__(self, db_id, name, address):
         self.db_id = db_id
         self.name = name
+        self.address = address
 
 class ShapeDictionary:
     def __init__(self, db_id, name, page):
@@ -42,6 +43,9 @@ class Shape:
         self.size = (width, height)
         self.bounding_box = BoundingBox(bbox_top,bbox_left,bbox_right,bbox_bottom)
         self.image = None
+        
+        self.hierarchy_count = None
+        self.hierarchy_max_size = None
 
     def has_no_parent(self):
         return self.parent_db_id == -1
@@ -65,11 +69,25 @@ class Shape:
         return Image.fromstring("1", self.size, imagebits, "raw", "1;I", 0, 1)
     
     def count_descendants(self):
-        count = 0
-        for child in self.children:
-            count += child.count_descendants()
-        count += len(self.children)
-        return count
+        if self.hierarchy_count is None:
+            count = 1 #count self
+            for child in self.children:
+                count += child.count_descendants()
+            count += len(self.children)
+            self.hierarchy_count = count 
+        return self.hierarchy_count - 1
+
+    def get_hierarchy_size(self):
+        if self.hierarchy_max_size is None:
+            max_width, max_height = self.width, self.height
+            for child in self.children:
+                child_width, child_height = child.get_hierarchy_size()
+                if child_width > max_width:
+                    max_width = child_width
+                if child_height > max_height:
+                    max_height = child_height
+            self.hierarchy_max_size = (max_width, max_height)
+        return self.hierarchy_max_size
 
     def linearise_hierarchy(self):
         linearised_hierarchy = []
@@ -84,6 +102,25 @@ class Shape:
             if child.depth() + 1 > max_depth:
                 max_depth = child.depth() + 1
         return max_depth
+    
+    def hierarchyheight(self):
+        height = 1
+        current_shape = self
+        while current_shape.parent is not None:
+            height += 1
+            current_shape = current_shape.parent 
+        return height
+    
+    def isAncestorOf(self, shape):
+        current_shape = shape
+        while current_shape.parent is not None:
+            if current_shape.parent == self:
+                return True
+            current_shape = current_shape.parent 
+        return False
+    
+    def isDescendantOf(self, shape):
+        return shape.isAncestorOf(self)     
     
     def max_width(self):
         childwidth = 0

@@ -6,13 +6,13 @@ Created on Apr 18, 2012
 '''
 
 import wx
-from utils import get_wx_image
+from internal.image_conversion import PilImageToWxBitmap
 
 
 class LabelPanel(wx.Panel):
     
-    def __init__(self, parent, data):
-        wx.Panel.__init__(self, parent, wx.ID_ANY)
+    def __init__(self, data, *args, **kwargs):
+        wx.Panel.__init__(self, *args, **kwargs)
 
         self.data = data
         staticbox = wx.StaticBox(self, label = 'Dane kształtu')
@@ -39,12 +39,16 @@ class LabelPanel(wx.Panel):
         if self.data.current_shape is not None:
             #currentShape = wx.StaticBitmap(self.inner_panel, wx.ID_ANY, get_wx_image(self.data.current_shape.get_image()))
             #sizer.Add(currentShape, 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
-            self.label_layout(sizer, "Dokument:", str(self.data.current_shape.id))
+            self.label_layout(sizer, "Dokument:", str(self.data.current_document.name))
+            self.label_layout(sizer, "Adres dokumentu:", str(self.data.current_document.address))
             self.label_layout(sizer, "Nazwa słownika kształtów: ", str(self.data.current_dictionary.name))
+            self.label_layout(sizer, "Liczba hierarchii w słowniku: ", str(len(self.data.shape_hierarchies)))
+            self.label_layout(sizer, "Liczba kształtów w słowniku: ", str(len(self.data.shapes)))
+            sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             #tu idzie obrazek
             imagepanel = wx.Panel(self.inner_panel)
             imagesizer = wx.BoxSizer(wx.VERTICAL)
-            shapeImage = wx.StaticBitmap(imagepanel, -1, get_wx_image(self.data.current_shape.get_image()))
+            shapeImage = wx.StaticBitmap(imagepanel, -1, PilImageToWxBitmap(self.data.current_shape.get_image()))
             imagesizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, 5)
             imagepanel.SetSizer(imagesizer)
             sizer.Add(imagepanel, 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)

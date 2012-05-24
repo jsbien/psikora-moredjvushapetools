@@ -3,7 +3,7 @@
 '''
 
 import MySQLdb as mdb
-from labeller_datatypes import *
+from datatypes import *
 
 
 class DatabaseManipulator:
@@ -25,8 +25,8 @@ class DatabaseManipulator:
         self.cursor.execute("SELECT * FROM documents")
         documents_data = self.cursor.fetchall()
         documents = []
-        for db_id, name in documents_data:
-            documents.append(Document(db_id,name)) 
+        for db_id, name, address in documents_data:
+            documents.append(Document(db_id, name, address)) 
         return documents
     
     def fetch_dictionaries(self, document_id):

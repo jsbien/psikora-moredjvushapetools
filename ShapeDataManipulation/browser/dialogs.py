@@ -10,9 +10,8 @@ import wx
 
 class ChooseDocumentDialog(wx.Dialog):
     
-    def __init__(self, data, parent, title):
-        super(ChooseDocumentDialog, self).__init__(parent=parent, 
-            title=title, size=(250, 200))
+    def __init__(self, data, *args, **kwargs):
+        wx.Dialog.__init__(self, *args, **kwargs)
 
         self.data = data
         
@@ -48,9 +47,9 @@ class ChooseDocumentDialog(wx.Dialog):
 
 class ChooseDictionaryDialog(wx.Dialog):
     
-    def __init__(self, data, parent, title):
-        super(ChooseDictionaryDialog, self).__init__(parent=parent, 
-            title=title, size=(250, 200))
+    def __init__(self, data, *args, **kwargs):
+        
+        wx.Dialog.__init__(self, *args, **kwargs)
 
         self.data = data
         

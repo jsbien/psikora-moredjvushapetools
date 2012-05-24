@@ -10,10 +10,10 @@ wxversion.select('2.8-unicode')
 import wx
 
 import argparse
-from internal.labeller_frame import Labeller
+from browser.frame import ShapeBrowser
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Creates a xhtml page presenting the contents of a DjVu shape database.', conflict_handler='resolve')
+    parser = argparse.ArgumentParser(description='Opens a GUI browser of the contents of a DjVu shape database.', conflict_handler='resolve')
     parser.add_argument("-h","--host", required=True, dest="db_host")
     parser.add_argument("-d","--database", required=True, dest="db_name")
     parser.add_argument("-u","--user", required=True, dest="db_user")
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     db_host = args.db_host
     
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = Labeller() # A Frame is a top-level window.
+    frame = ShapeBrowser(parent = None, title = "Shape browser") # A Frame is a top-level window.
     frame.connect_to_database(db_name, db_host, db_user, db_pass)
     frame.load_last_session()
     app.MainLoop()

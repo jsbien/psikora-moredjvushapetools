@@ -1,9 +1,8 @@
 '''
-Created on Apr 17, 2012
-
-@author: zasvid
+@author: Piotr Sikora
 '''
-class LabellerData():
+
+class ShapeData():
     
     def __init__(self):
         self.documents = []
@@ -11,6 +10,7 @@ class LabellerData():
         self.shape_dictionaries = []
         self.current_dictionary = None
         self.shape_hierarchies = []
+        self.hierarchy_sorting_method = None
         self.current_shape_hierarchy = None
         self.shapes = []
         self.shape_translation = {}
@@ -33,4 +33,13 @@ class LabellerData():
                 shape.parent = self.shape_translation[shape.parent_db_id]
                 shape.parent.children.append(shape)
 
-    
+    def sorted_hierarchies(self, sorting_method):
+        if self.hierarchy_sorting_method != sorting_method:
+            self.hierarchy_sorting_method = sorting_method
+            if sorting_method is None:
+                self.shape_hierarchies.sort(key = lambda hierarchy: hierarchy.db_id)
+            elif sorting_method == 'count':
+                self.shape_hierarchies.sort(key = lambda hierarchy: hierarchy.count_descendants(), reverse = True)
+            elif sorting_method == 'size':
+                self.shape_hierarchies.sort(key = lambda hierarchy: hierarchy.get_hierarchy_size()[0] * hierarchy.get_hierarchy_size()[1], reverse = True)
+        return self.shape_hierarchies
