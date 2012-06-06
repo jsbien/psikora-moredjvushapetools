@@ -17,21 +17,29 @@ class ChooseDocumentDialog(wx.Dialog):
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.listbox = wx.ListBox(self, wx.ID_ANY)
+        selection = 1
 
         for i in range(len(self.data.documents)):
             self.listbox.Insert(self.data.documents[i].name, i, self.data.documents[i])
+            if self.data.current_document == self.data.documents[i]:
+                selection = i
+        
+        self.listbox.Select(selection)
         
         sizer.Add(self.listbox, 1, wx.EXPAND | wx.ALL, 5)
 
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer = wx.StdDialogButtonSizer()
         
-        okButton = wx.Button(self, label='Ok')
-        closeButton = wx.Button(self, label='Anuluj')
-        button_sizer.Add(okButton)
-        button_sizer.Add(closeButton, flag=wx.LEFT, border=5)
-
+        okButton = wx.Button(self, id = wx.ID_OK, label='Ok')
+        cancelButton = wx.Button(self, id = wx.ID_CANCEL, label='Anuluj')
+        
         okButton.Bind(wx.EVT_BUTTON, self.OnChoice)
-        closeButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        okButton.SetDefault()
+        cancelButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        
+        button_sizer.SetAffirmativeButton(okButton)
+        button_sizer.SetCancelButton(cancelButton)
+        button_sizer.Realize()
         sizer.Add(button_sizer, 1, flag= wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
         self.SetSizer(sizer)
         
@@ -56,9 +64,15 @@ class ChooseDictionaryDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.listbox = wx.ListBox(self, wx.ID_ANY)
 
+        selection = 0
+        
         for i in range(len(self.data.shape_dictionaries)):
             self.listbox.Insert(self.data.shape_dictionaries[i].name, i, self.data.shape_dictionaries[i])
+            if self.data.current_dictionary == self.data.shape_dictionaries[i]:
+                selection = i
         
+        self.listbox.Select(selection)
+
         sizer.Add(self.listbox, 1, wx.EXPAND | wx.ALL, 5)
 
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)

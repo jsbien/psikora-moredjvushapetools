@@ -5,11 +5,11 @@
 
 import wx
 from internal.database_manipulation import DatabaseManipulator
-from dialogs import *
+from internal.dialogs import *
 from internal.data import ShapeData
-from shapes_panel import ShapesPanel 
+from internal.shapes_panel import ShapesPanel 
 from roots_panel import RootsPanel
-from label_panel import LabelPanel
+from internal.label_panel import LabelPanel
 
 class ShapeBrowser(wx.Frame):
     
@@ -157,6 +157,7 @@ class ShapeBrowser(wx.Frame):
     
     def load_last_session(self):
         #TODO: temporary test
+        """
         self.data.current_document = self.data.documents[0]
         self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
         self.data.current_dictionary = self.data.shape_dictionaries[0]
@@ -166,5 +167,6 @@ class ShapeBrowser(wx.Frame):
         self.roots_panel.regenerate()
         self.shapes.regenerate()
         self.label_panel.regenerate()
-        #if self.choose_document():
-         #   self.choose_dictionary()  
+        """
+        if self.choose_document():
+            self.choose_dictionary()  

@@ -2,11 +2,12 @@
 @author: Piotr Sikora
 '''
 
-class ShapeData():
+class ShapeData:
     
     def __init__(self):
         self.documents = []
         self.current_document = None
+        self.hocr_pages = {}
         self.shape_dictionaries = []
         self.current_dictionary = None
         self.shape_hierarchies = []
@@ -32,7 +33,8 @@ class ShapeData():
             else:
                 shape.parent = self.shape_translation[shape.parent_db_id]
                 shape.parent.children.append(shape)
-
+        self.hierarchy_sorting_method = None
+        
     def sorted_hierarchies(self, sorting_method):
         if self.hierarchy_sorting_method != sorting_method:
             self.hierarchy_sorting_method = sorting_method
