@@ -74,9 +74,6 @@ class hOCRLabeller(wx.Frame):
 
         #self.Bind(wx.EVT_TOOL, self.OnQuit, tool)
         
-        
-        
-        
         self.SetSize((1024, 768))
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -151,22 +148,21 @@ class hOCRLabeller(wx.Frame):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")
         if path is not None:
             listing = os.listdir(path)
-            for file in listing:
-                print(file)
-                if file == self.data.current_document.name:
-                    self.open_djvu_file(file)
-                    
+            for filename in listing:
+                print(filename)
+                if filename == self.data.current_document.name:
+                    self.open_djvu_file(filename)
                 else:
                     pass
             
-    def open_djvu_file(self, file):
+    def open_djvu_file(self, filename):
         try:
-            self.data_hocr.document = self.context.new_document(djvu.decode.FileURI(file))
+            self.data_hocr.document = self.context.new_document(djvu.decode.FileURI(filename))
             self.data_hocr.text_model = TextModel(self.data_hocr.document)
             self.data_hocr.page_no = 0 # again, to set status bar text
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
-            
+
         except djvu.decode.JobFailed:
             self.data_hocr.text_model = None
             self.data_hocr.document = None
@@ -176,7 +172,6 @@ class hOCRLabeller(wx.Frame):
             default_dir = "" #current_directory
         else:
             default_dir = self.last_visited_directory
-        
         """
         Show the DirDialog and print the user's choice to stdout
         """

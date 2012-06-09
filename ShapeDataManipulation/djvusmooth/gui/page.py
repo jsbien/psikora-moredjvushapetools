@@ -1,6 +1,9 @@
 # encoding=UTF-8
 # Copyright © 2008, 2009, 2010 Jakub Wilk <jwilk@jwilk.net>
 #
+# Modified for MoreDjVuShapeTools by Piotr Sikora
+# Copyright © 2012 Piotr Sikora <piotr.sikora@student.uw.edu.pl>
+
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; version 2 dated June, 1991.
@@ -30,6 +33,167 @@ PIXEL_FORMAT.y_top_to_bottom = 1
 RENDER_NONRASTER_TEXT = 0
 RENDER_NONRASTER_MAPAREA = 1
 RENDER_NONRASTER_VALUES = (RENDER_NONRASTER_TEXT, RENDER_NONRASTER_MAPAREA, None)
+
+class NodeShape(wx.lib.ogl.RectangleShape):
+
+    def _get_frame_color(self):
+        raise NotImplementedError
+
+    def _get_text(self):
+        return None
+
+    def __init__(self, node, has_text, xform_real_to_screen):
+        wx.lib.ogl.RectangleShape.__init__(self, 100, 100)
+        self._xform_real_to_screen = xform_real_to_screen
+        self._node = node
+        self._update_size()
+        self._text_color = self._get_frame_color()
+        self._text_pen = wx.Pen(self._text_color, 1)
+        self._selection_color = self._get_selection_color()
+        self._selection_pen = wx.Pen(self._selection_color, 1)
+        self.SetBrush(wx.TRANSPARENT_BRUSH)
+        self._shows_text = has_text
+        self._text = None
+        if self._update_text() is not None:
+            self._textMarginX = 1
+            self._textMarginY = 1
+            self.SetBrush(wx.WHITE_BRUSH)
+        self.SetPen(self._text_pen)
+        self.SetDraggable(False)
+        self.SetCentreResize(False)
+
+    @property
+    def node(self):
+        return self._node
+
+    def _update_size(self):
+        x, y, w, h = self._xform_real_to_screen(self._node.rect)
+        if h <= 13:
+            font_size = 8
+        elif h <= 15:
+            font_size = 9
+        else:
+            font_size = 10
+        self.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        self.SetSize(w, h)
+        x, y = x + w // 2, y + h // 2
+        self.SetX(x)
+        self.SetY(y)
+
+    def _update_text(self):
+        self.ClearText()
+        node = self._node
+        if not self._shows_text:
+            return
+        text = self._text = self._get_text()
+        if text is None:
+            return
+        self.AddText(text)
+        return text
+
+    def update(self):
+        self._update_size()
+        self._update_text()
+        canvas = self.GetCanvas()
+        canvas.Refresh() # FIXME: something lighter here?
+
+    def _update_node_size(self):
+        x, y, w, h = self.GetX(), self.GetY(), self.GetWidth(), self.GetHeight()
+        screen_rect = x - w//2, y - h//2, w, h
+        self._node.rect = self._xform_real_to_screen.inverse(screen_rect)
+
+    def OnMovePost(self, dc, x, y, old_x, old_y, display):
+        wx.lib.ogl.RectangleShape.OnMovePost(self, dc, x, y, old_x, old_y, display)
+        self._update_node_size()
+
+    def get_cdc(self):
+        canvas = self.GetCanvas()
+        dc = wx.ClientDC(canvas)
+        canvas.PrepareDC(dc)
+        return canvas, dc
+
+    def deselect(self, notify = True, cdc = None):
+        if not self.Selected():
+            return
+        try:
+            canvas, dc = cdc
+        except TypeError:
+            canvas, dc = self.get_cdc()
+        self.Select(False, dc)
+        canvas.Redraw(dc)
+        if notify:
+            self.node.notify_deselect()
+
+    def select(self, notify = True, cdc = None):
+        if self.Selected():
+            return
+        try:
+            canvas, dc = cdc
+        except TypeError:
+            canvas, dc = self.get_cdc()
+        to_deselect = list(shape for shape in canvas.GetDiagram().GetShapeList() if shape.Selected())
+        self.SetPen(self._selection_pen)
+        self.Select(True, dc)
+        self.SetPen(self._text_pen)
+        for shape in to_deselect:
+            shape.Select(False, dc)
+        if to_deselect:
+            canvas.Redraw(dc)
+        if notify:
+            self.node.notify_select()
+
+class PageTextCallback(models.text.PageTextCallback):
+
+    def __init__(self, widget):
+        self._widget = widget
+
+    def notify_node_change(self, node):
+        shape = self._widget._nonraster_shapes_map.get(node)
+        if shape is not None:
+            shape.update()
+
+    def notify_node_select(self, node):
+        self._widget.on_node_selected(node)
+
+    def notify_node_deselect(self, node):
+        self._widget.on_node_deselected(node)
+
+    def notify_node_children_change(self, node):
+        shape = self._widget._nonraster_shapes_map.get(node)
+        if shape is not None:
+            shape.deselect()
+        self._widget.page = True
+        # FIXME: consider something lighter here
+
+    def notify_tree_change(self, node):
+        self._widget.page = True
+
+class TextShape(NodeShape):
+
+    _FRAME_COLORS = \
+    {
+        djvu.const.TEXT_ZONE_COLUMN:    (0x80, 0x80, 0x00),
+        djvu.const.TEXT_ZONE_REGION:    (0x80, 0x80, 0x80),
+        djvu.const.TEXT_ZONE_PARAGRAPH: (0x80, 0x00, 0x00),
+        djvu.const.TEXT_ZONE_LINE:      (0x80, 0x00, 0x80),
+        djvu.const.TEXT_ZONE_WORD:      (0x00, 0x00, 0x80),
+        djvu.const.TEXT_ZONE_CHARACTER: (0x00, 0x80, 0x00),
+    }
+    
+    _SELECTION_COLOUR = (0xFF, 0x00, 0x00)
+
+    def _get_frame_color(self):
+        return wx.Color(*self._FRAME_COLORS[self._node.type])
+        
+    def _get_selection_color(self):
+        return self._SELECTION_COLOUR
+
+    def _get_text(self):
+        if self._node.is_inner():
+            return
+        return self._node.text
+
+
 
 class Zoom(object):
 
@@ -185,154 +349,6 @@ class PageImage(wx.lib.ogl.RectangleShape):
             dc.DrawRectangle(x, y, w, h)
         dc.EndDrawing()
 
-class NodeShape(wx.lib.ogl.RectangleShape):
-
-    def _get_frame_color(self):
-        raise NotImplementedError
-
-    def _get_text(self):
-        return None
-
-    def __init__(self, node, has_text, xform_real_to_screen):
-        wx.lib.ogl.RectangleShape.__init__(self, 100, 100)
-        self._xform_real_to_screen = xform_real_to_screen
-        self._node = node
-        self._update_size()
-        self._text_color = self._get_frame_color()
-        self._text_pen = wx.Pen(self._text_color, 1)
-        self.SetBrush(wx.TRANSPARENT_BRUSH)
-        self._shows_text = has_text
-        self._text = None
-        if self._update_text() is not None:
-            self._textMarginX = 1
-            self._textMarginY = 1
-            self.SetBrush(wx.WHITE_BRUSH)
-        self.SetPen(self._text_pen)
-        self.SetCentreResize(False)
-
-    @property
-    def node(self):
-        return self._node
-
-    def _update_size(self):
-        x, y, w, h = self._xform_real_to_screen(self._node.rect)
-        if h <= 13:
-            font_size = 8
-        elif h <= 15:
-            font_size = 9
-        else:
-            font_size = 10
-        self.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.NORMAL))
-        self.SetSize(w, h)
-        x, y = x + w // 2, y + h // 2
-        self.SetX(x)
-        self.SetY(y)
-
-    def _update_text(self):
-        self.ClearText()
-        node = self._node
-        if not self._shows_text:
-            return
-        text = self._text = self._get_text()
-        if text is None:
-            return
-        self.AddText(text)
-        return text
-
-    def update(self):
-        self._update_size()
-        self._update_text()
-        canvas = self.GetCanvas()
-        canvas.Refresh() # FIXME: something lighter here?
-
-    def _update_node_size(self):
-        x, y, w, h = self.GetX(), self.GetY(), self.GetWidth(), self.GetHeight()
-        screen_rect = x - w//2, y - h//2, w, h
-        self._node.rect = self._xform_real_to_screen.inverse(screen_rect)
-
-    def OnMovePost(self, dc, x, y, old_x, old_y, display):
-        wx.lib.ogl.RectangleShape.OnMovePost(self, dc, x, y, old_x, old_y, display)
-        self._update_node_size()
-
-    def get_cdc(self):
-        canvas = self.GetCanvas()
-        dc = wx.ClientDC(canvas)
-        canvas.PrepareDC(dc)
-        return canvas, dc
-
-    def deselect(self, notify = True, cdc = None):
-        if not self.Selected():
-            return
-        try:
-            canvas, dc = cdc
-        except TypeError:
-            canvas, dc = self.get_cdc()
-        self.Select(False, dc)
-        canvas.Redraw(dc)
-        if notify:
-            self.node.notify_deselect()
-
-    def select(self, notify = True, cdc = None):
-        if self.Selected():
-            return
-        try:
-            canvas, dc = cdc
-        except TypeError:
-            canvas, dc = self.get_cdc()
-        to_deselect = list(shape for shape in canvas.GetDiagram().GetShapeList() if shape.Selected())
-        self.Select(True, dc)
-        for shape in to_deselect:
-            shape.Select(False, dc)
-        if to_deselect:
-            canvas.Redraw(dc)
-        if notify:
-            self.node.notify_select()
-
-class PageTextCallback(models.text.PageTextCallback):
-
-    def __init__(self, widget):
-        self._widget = widget
-
-    def notify_node_change(self, node):
-        shape = self._widget._nonraster_shapes_map.get(node)
-        if shape is not None:
-            shape.update()
-
-    def notify_node_select(self, node):
-        self._widget.on_node_selected(node)
-
-    def notify_node_deselect(self, node):
-        self._widget.on_node_deselected(node)
-
-    def notify_node_children_change(self, node):
-        shape = self._widget._nonraster_shapes_map.get(node)
-        if shape is not None:
-            shape.deselect()
-        self._widget.page = True
-        # FIXME: consider something lighter here
-
-    def notify_tree_change(self, node):
-        self._widget.page = True
-
-class TextShape(NodeShape):
-
-    _FRAME_COLORS = \
-    {
-        djvu.const.TEXT_ZONE_COLUMN:    (0x80, 0x80, 0x00),
-        djvu.const.TEXT_ZONE_REGION:    (0x80, 0x80, 0x80),
-        djvu.const.TEXT_ZONE_PARAGRAPH: (0x80, 0x00, 0x00),
-        djvu.const.TEXT_ZONE_LINE:      (0x80, 0x00, 0x80),
-        djvu.const.TEXT_ZONE_WORD:      (0x00, 0x00, 0x80),
-        djvu.const.TEXT_ZONE_CHARACTER: (0x00, 0x80, 0x00),
-    }
-
-    def _get_frame_color(self):
-        return wx.Color(*self._FRAME_COLORS[self._node.type])
-
-    def _get_text(self):
-        if self._node.is_inner():
-            return
-        return self._node.text
 
 class MapareaShape(NodeShape):
 

@@ -31,6 +31,15 @@ class LabelPanel(wx.Panel):
         sizer.Add(linesizer, 0, wx.ALL | wx.EXPAND, 5)
         #sizer.AddSpacer((5,5),0)
 
+    def text_control_layout(self, sizer, label, initial_value):
+        linesizer = wx.BoxSizer(wx.HORIZONTAL)
+        infolabel = wx.StaticText(self.inner_panel, wx.ID_ANY, label)
+        valuechanger = 
+        #valuelabel = wx.StaticText(self.inner_panel, wx.ID_ANY, value)
+        linesizer.Add(infolabel, 0, wx.ALL, 5)
+        linesizer.AddStretchSpacer()
+        linesizer.Add(valuechanger, 0, wx.ALL, 5)
+        sizer.Add(linesizer, 0, wx.ALL | wx.EXPAND, 5)
         
     def regenerate(self):
         self.inner_panel.DestroyChildren()

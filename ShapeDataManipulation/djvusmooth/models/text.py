@@ -1,6 +1,9 @@
 # encoding=UTF-8
 # Copyright © 2008, 2009 Jakub Wilk <jwilk@jwilk.net>
 #
+# Modified for MoreDjVuShapeTools by Piotr Sikora
+# Copyright © 2012 Piotr Sikora <piotr.sikora@student.uw.edu.pl>
+#
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; version 2 dated June, 1991.
