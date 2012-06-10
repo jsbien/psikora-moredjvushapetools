@@ -34,10 +34,13 @@ class _ShapePanel(wx.Panel):
         sizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, shape_image_margin)
         
         self.SetSizer(sizer)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnClick)
-        shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnClick)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
+        shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
+        if self.parent.data.labelling:
+            self.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
+            shapeImage.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
         
-    def OnClick(self, event):
+    def OnChooseThisShape(self, event):
         self.parent.data.current_shape = self.shape
         if self.parent.currently_selected_subpanel is not None:
             self.parent.currently_selected_subpanel.deselect()
@@ -49,7 +52,25 @@ class _ShapePanel(wx.Panel):
         self.parent.highlight_branch(self.shape)
         self.select()
 
+    def OnPopup(self, event):
+        menu = wx.Menu()
+        item = menu.Append(id = wx.ID_ANY, text = "Wytnij kształt z hierarchii")
+        self.Bind(wx.EVT_MENU, self.OnCutOut, item)
+        item = menu.Append(id = wx.ID_ANY, text = "Odetnij poddrzewo od hierarchii")
+        self.Bind(wx.EVT_MENU, self.OnCutOff, item)
+        self.PopupMenu(menu)
+        menu.Destroy()
 
+    def OnCutOut(self, event):
+        self.parent.data.cut_out(self.shape)
+        self.parent.callback.regenerate()
+        self.parent.regenerate()
+        
+    def OnCutOff(self, event):
+        self.parent.data.cut_off(self.shape)
+        self.parent.callback.regenerate()
+        self.parent.regenerate()
+    
     def deselect(self):
         self.SetBackgroundColour(wx.NullColor)
         
@@ -64,7 +85,7 @@ class _ShapePanel(wx.Panel):
 
 
 class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
-    def __init__(self, data, target_panel, *args, **kwargs):
+    def __init__(self, data, target_panel,  *args, **kwargs):
         wx.lib.scrolledpanel.ScrolledPanel.__init__(self, *args, **kwargs)
         self.data = data
         self.target_panel = target_panel
@@ -75,6 +96,7 @@ class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
         sizer = wx.StaticBoxSizer(staticbox, orient = wx.HORIZONTAL)
         sizer.Add(self.panel, 1, wx.ALL | wx.EXPAND, 15)
         self.SetSizer(sizer)
+        self.callback = None
         
     def regenerate(self):
         self.currently_selected_subpanel = None

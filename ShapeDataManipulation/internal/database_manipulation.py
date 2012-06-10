@@ -8,7 +8,7 @@ from datatypes import *
 
 class DatabaseManipulator:
     
-    def __init__(self, db_name, db_host, db_user, db_pass):
+    def __init__(self, db_name, db_host, db_user, db_pass, labelling = True):
         self.db_name = db_name
         self.db_host = db_host
         self.db_user = db_user
@@ -16,6 +16,8 @@ class DatabaseManipulator:
         self.connection = mdb.connect(db_host, db_user, db_pass, db_name)
         with self.connection:
             self.cursor = self.connection.cursor()
+            if labelling:
+                self.prepare_database_for_labelling()
     
     def close(self):  
         print("Closing connection!")      
@@ -48,13 +50,56 @@ class DatabaseManipulator:
             shapes.append(Shape(shape_data))
         return shapes
     
-    """
-    Unpacking shapes:
-    
-    Unpacking dictionaries:
-    for dict_id, dict_name, page_number, document_id in data:
-    Unpacking documents:
-    doc_id, docname = row
-    Unpacking blits:
-    for blit_id, document_id, page_number, shape_id, b_left, b_bottom
-    """
+    def prepare_database_for_labelling(self):
+        self.cursor.execute("SHOW TABLES LIKE 'labels'")
+        if self.cursor.fetchone() is None:
+            create_command = "create table labels(" \
+                            "id INT not null auto_increment primary key, " \
+                            "font varchar(60) not null, " \
+                            "font_size varchar(60) not null, " \
+                            "user VARCHAR(60) not null, " \
+                            "date DATETIME " \
+                            ")"
+            self.cursor.execute(create_command)
+        self.cursor.execute("SHOW TABLES LIKE 'labelled_shapes'")
+        if self.cursor.fetchone() is None:
+            create_command = "create table labelled_shapes(" \
+                            "label_id INT not null, " \
+                            "shape_id INT not null " \
+                            ")"
+            self.cursor.execute(create_command)
+        self.cursor.execute("SHOW TABLES LIKE 'label_chars'")
+        if self.cursor.fetchone() is None:
+            create_command = "create table label_chars(" \
+                            "label_id INT not null, " \
+                            "uchar_id INT not null " \
+                            ")"
+            self.cursor.execute(create_command)
+        self.cursor.execute("SHOW TABLES LIKE 'unicode_chars'")
+        if self.cursor.fetchone() is None:
+            #create_command = "create table unicode_chars(" \
+             #               "label_id INT not null, " \
+              #              "uchar_id INT not null, " \
+               #             ")"
+            #self.cursor.execute(create_command)
+            print("Unicode char table not ready.")
+            #TODO: what to put in the unicode chars table
+        self.cursor.execute("SHOW TABLES LIKE 'shape_edits'")
+        if self.cursor.fetchone() is None:
+            create_command = "create table shape_edits(" \
+                            "id INT not null auto_increment primary key, " \
+                            "shape_id INT not null, " \
+                            "prev_parent INT not null, " \
+                            "new_parent INT not null, " \
+                            "user VARCHAR(60) not null, " \
+                            "date DATETIME " \
+                            ")"
+            self.cursor.execute(create_command)
+
+    def shape_edit(self, shape_id, prev_parent_id, new_parent_id):
+        query = "UPDATE shapes SET parent_id = " + str(new_parent_id) + " WHERE id = " + str(shape_id)
+        self.cursor.execute(query)
+        query = "INSERT INTO shape_edits(user, shape_id, prev_parent, new_parent) VALUES('" \
+                + str(self.db_user)+"', " + str(shape_id) + ", " + str(prev_parent_id) + ", " + str(new_parent_id) + ")"
+        self.cursor.execute(query)
+        #TODO: datetime

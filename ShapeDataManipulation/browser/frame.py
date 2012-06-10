@@ -67,7 +67,7 @@ class ShapeBrowser(wx.Frame):
         self.label_panel = LabelPanel(parent = self, data = self.data)
         self.shapes = ShapesPanel(data = self.data, target_panel = self.label_panel, parent = self)
         self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panel = self.shapes)
-        
+        self.shapes.callback = self.roots_panel
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         
         innerSizer = wx.BoxSizer(wx.VERTICAL)
@@ -99,6 +99,7 @@ class ShapeBrowser(wx.Frame):
         if hasattr(self,'db_manipulator'):
             del self.db_manipulator
         self.db_manipulator = DatabaseManipulator(db_name, db_host, db_user, db_pass)
+        self.data.db_manipulator = self.db_manipulator
         self.data.documents = self.db_manipulator.fetch_documents()
 
     def OnChooseDocument(self, event):

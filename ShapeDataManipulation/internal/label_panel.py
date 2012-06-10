@@ -34,7 +34,7 @@ class LabelPanel(wx.Panel):
     def text_control_layout(self, sizer, label, initial_value):
         linesizer = wx.BoxSizer(wx.HORIZONTAL)
         infolabel = wx.StaticText(self.inner_panel, wx.ID_ANY, label)
-        valuechanger = 
+        valuechanger = wx.TextCtrl(self.inner_panel)
         #valuelabel = wx.StaticText(self.inner_panel, wx.ID_ANY, value)
         linesizer.Add(infolabel, 0, wx.ALL, 5)
         linesizer.AddStretchSpacer()

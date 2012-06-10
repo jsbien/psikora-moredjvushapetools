@@ -102,6 +102,7 @@ class hOCRLabeller(wx.Frame):
         if hasattr(self,'db_manipulator'):
             del self.db_manipulator
         self.db_manipulator = DatabaseManipulator(db_name, db_host, db_user, db_pass)
+        self.data.db_manipulator = self.db_manipulator
         self.data.documents = self.db_manipulator.fetch_documents()
 
     def OnChooseDocument(self, event):

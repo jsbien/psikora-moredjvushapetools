@@ -299,7 +299,7 @@ class PageImage(wx.lib.ogl.RectangleShape):
             canvas.Redraw(dc)
             shape.node.notify_deselect()
 
-    def OnRightClick(self, x, y, keys=0, attachment=0):
+    def OnPopup(self, x, y, keys=0, attachment=0):
         wx.CallAfter(lambda: self._widget.on_right_click((x, y), None))
 
     def OnDraw(self, dc):
@@ -403,7 +403,7 @@ class ShapeEventHandler(wx.lib.ogl.ShapeEvtHandler):
         else:
             shape.select(notify = True)
 
-    def OnRightClick(self, x, y, keys=0, attachment=0):
+    def OnPopup(self, x, y, keys=0, attachment=0):
         shape = self.GetShape()
         wx.CallAfter(lambda: self._widget.on_right_click((x, y), shape.node))
 

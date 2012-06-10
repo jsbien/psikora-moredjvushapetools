@@ -34,11 +34,11 @@ class RootPanel(wx.Panel):
         sizer.Add(imagePanel, 0, wx.ALL | wx.ALIGN_CENTER, 5)
         sizer.AddStretchSpacer()
         self.SetSizer(sizer)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnClick)
-        shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnClick)
-        imagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnClick)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
+        shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
+        imagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
         
-    def OnClick(self, event):
+    def OnChooseThisShape(self, event):
         self.select()
 
     def deselect(self):
