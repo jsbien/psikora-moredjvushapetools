@@ -39,6 +39,7 @@ class _ShapePanel(wx.Panel):
         if self.parent.data.labelling:
             self.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
             shapeImage.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
+        self.cut_regenerate = False
         
     def OnChooseThisShape(self, event):
         self.parent.data.current_shape = self.shape
@@ -60,17 +61,19 @@ class _ShapePanel(wx.Panel):
         self.Bind(wx.EVT_MENU, self.OnCutOff, item)
         self.PopupMenu(menu)
         menu.Destroy()
+        if self.cut_regenerate:
+            self.parent.callback.regenerate()
+            self.parent.regenerate()
+            self.cut_regenerate = False
 
     def OnCutOut(self, event):
         self.parent.data.cut_out(self.shape)
-        self.parent.callback.regenerate()
-        self.parent.regenerate()
+        self.cut_regenerate = True
         
     def OnCutOff(self, event):
         self.parent.data.cut_off(self.shape)
-        self.parent.callback.regenerate()
-        self.parent.regenerate()
-    
+        self.cut_regenerate = True
+            
     def deselect(self):
         self.SetBackgroundColour(wx.NullColor)
         
