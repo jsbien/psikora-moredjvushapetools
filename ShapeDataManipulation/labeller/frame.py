@@ -9,9 +9,6 @@ import wx.lib.newevent
 import wx.lib.scrolledpanel
 
 
-from internal.database_manipulation import DatabaseManipulator
-from internal.dialogs import *
-from internal.data import ShapeData
 from hocr import DatahOCR
 from labeller.context import ContextPanel
 import shelve
@@ -23,57 +20,31 @@ import djvusmooth.models.text
 import djvu.decode
 import djvu.const
 
-class hOCRLabeller(wx.Frame):
+from internal.frame import DjVuShapeToolsFrame
+
+class hOCRLabeller(DjVuShapeToolsFrame):
     
     def __init__(self, *args, **kwargs):
-        wx.Frame.__init__(self, *args, **kwargs)
+        DjVuShapeToolsFrame.__init__(self, *args, **kwargs)
 
         wx.lib.ogl.OGLInitialize()
 
-        self.data = ShapeData()
         self.data_hocr = DatahOCR()
         self.last_visited_directory = None
         self.context = Context(self)
         
-        # binding general behaviour
-        self.Bind(wx.EVT_CLOSE, self.OnExit)
-        
-        #building a menu
-        menubar = wx.MenuBar()
-        
         # menu - database
         menu = wx.Menu()
+        self._add_menu_item(menu, 'Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy', self.OnChooseDocument)
+        self._add_menu_item(menu, text = 'Otwórz pliki z &hOCR', help = 'Wyświetla okno wybór plików zawierających dane hOCR', binding = self.OnLoadHOCR)
+        self._add_menu_item(menu, '&Wyjście', 'Wyjdź z programu', binding = self.OnQuit)
+        self.menubar.Append(menu, '&Dane')
         
-        menuitem = menu.Append(wx.ID_ANY, 'Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy')
-        self.Bind(wx.EVT_MENU, self.OnChooseDocument, menuitem)
 
-        #menuitem = menu.Append(wx.ID_ANY, 'Wybierz &Słownik', 'Wyświetla okno wyboru słownika z bazy')
-        #self.Bind(wx.EVT_MENU, self.OnChooseDictionary, menuitem)
-
-        menuitem = menu.Append(wx.ID_ANY, 'Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR')
-        self.Bind(wx.EVT_MENU, self.OnLoadHOCR, menuitem)
-
-        menuitem = menu.Append(wx.ID_EXIT, '&Wyjście', 'Wyjdź z programu')
-        self.Bind(wx.EVT_MENU, self.OnQuit, menuitem)
-        
-        menubar.Append(menu, '&Dane')
-        
-        #Help menu
-        #menu = wx.Menu()
-        
-        #menuitem = menu.Append(wx.ID_ANY, '&O programie', "Informacje o programie")
-        
-        #menubar.Append(menu, '&Pomoc')
-        
-        self.SetMenuBar(menubar)
-        
-        toolbar = self.CreateToolBar()
         #tool = toolbar.AddLabelTool(wx.ID_ANY, 'Prz', wx.Bitmap('texit.png'))
         #TODO: make icons
-        toolbar.Realize()
+        self.toolbar.Realize()
 
-        #self.Bind(wx.EVT_TOOL, self.OnQuit, tool)
-        
         self.SetSize((1024, 768))
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -93,55 +64,13 @@ class hOCRLabeller(wx.Frame):
         #TODO: global binding of keystrokes
         self.context_panel.page_widget.Bind(wx.EVT_CHAR, self.on_char)
 
-
         self.Maximize()
         self.Centre()
         self.Show(True)
-        
-    def connect_to_database(self, db_name, db_host, db_user, db_pass):
-        if hasattr(self,'db_manipulator'):
-            del self.db_manipulator
-        self.db_manipulator = DatabaseManipulator(db_name, db_host, db_user, db_pass)
-        self.data.db_manipulator = self.db_manipulator
-        self.data.documents = self.db_manipulator.fetch_documents()
-
+    
     def OnChooseDocument(self, event):
         self.choose_document()
-        
-    def choose_document(self):
-        previous_document = self.data.current_document
-        dialog = ChooseDocumentDialog(data = self.data, title='Wybierz dokument z bazy', parent = None)
-        dialog.ShowModal()
-        dialog.Destroy()
-        if self.data.current_document is not None:
-            self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
-        #reset data after document change
-        if self.data.current_document != previous_document:
-            self.data.current_dictionary = None
-            self.data.shape_hierarchies = []
-            self.data.current_hierarchy = None
-            self.data.current_shape = None
-            #self.label_panel.regenerate()
-            #self.roots_panel.regenerate()
-            
-        return (self.data.current_document is not None)
-        #TODO: use Observers to observe when document changes (or at least check for change here)
-
-    def OnQuit(self, event):
-        self.Close()
-        self.DestroyChildren()
-        self.Destroy()
-            
-    def OnExit(self, event):
-        """ This method is called when exiting the application
-            via menu or closing the application window.
-        """
-        if hasattr(self,'db_manipulator'):
-            self.db_manipulator.close()
-        # save the session
-        self.save_session()
-        event.Skip()
-        
+    
     def OnLoadHOCR(self, event):
         self.load_hocr_data()
         
@@ -163,7 +92,8 @@ class hOCRLabeller(wx.Frame):
             self.data_hocr.page_no = 0 # again, to set status bar text
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
-
+            self.context_panel.Refresh()
+            self.context_panel.Update()
         except djvu.decode.JobFailed:
             self.data_hocr.text_model = None
             self.data_hocr.document = None

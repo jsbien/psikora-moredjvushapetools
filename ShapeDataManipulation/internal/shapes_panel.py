@@ -125,7 +125,7 @@ class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
                     pos_row += 1 
                 self.shape_panels.append(shapepanel)
             self.panel.SetSizer(sizer)
-            self.SetupScrolling(scroll_y = False)
+            self.SetupScrolling()
             self.Refresh()
             self.Update()
     

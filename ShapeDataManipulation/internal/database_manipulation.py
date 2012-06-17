@@ -39,6 +39,13 @@ class DatabaseManipulator:
             dictionaries.append(ShapeDictionary(db_id, name, page))
         return dictionaries
         
+    def fetch_pages(self, document_id):
+        self.cursor.execute("SELECT * FROM pages WHERE document_id = "+ str(document_id))
+        data = self.cursor.fetchall()
+        pages = {}
+        for _, inh_dict_id, page in data:
+            pages[page] = inh_dict_id
+        return pages
     
     def fetch_shapes(self, dictionary_id):
         """ Fetches shapes from a single dictionary

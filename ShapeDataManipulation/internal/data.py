@@ -11,6 +11,7 @@ class ShapeData:
         self.current_document = None
         self.hocr_pages = {}
         self.shape_dictionaries = []
+        self.pages = {}
         self.current_dictionary = None
         self.shape_hierarchies = []
         self.hierarchy_sorting_method = None

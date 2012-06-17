@@ -132,11 +132,10 @@ class NodeShape(wx.lib.ogl.RectangleShape):
         except TypeError:
             canvas, dc = self.get_cdc()
         to_deselect = list(shape for shape in canvas.GetDiagram().GetShapeList() if shape.Selected())
-        self.SetPen(self._selection_pen)
-        self.Select(True, dc)
-        self.SetPen(self._text_pen)
-        for shape in to_deselect:
-            shape.Select(False, dc)
+
+        #self.Select(True, dc)
+        #for shape in to_deselect:
+        #   shape.Select(False, dc)
         if to_deselect:
             canvas.Redraw(dc)
         if notify:

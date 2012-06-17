@@ -514,7 +514,7 @@ Also see [[AdvancedOptions]]</pre>
 <pre>* pakiet dla ubuntu
 </pre>
 </div>
-<div title="Eksport kształtów" creator="zasvid" modifier="PiotrSikora" created="201203280939" modified="201203281428" changecount="3">
+<div title="Eksport kształtów" creator="zasvid" modifier="zasvid" created="201203280939" modified="201206091600" changecount="4">
 <pre>* uwolnienie eksportera od forka djvulibre
 * przyłączenie kodu do djview4poliqarp
 * przyspieszenie działania
@@ -524,7 +524,7 @@ Also see [[AdvancedOptions]]</pre>
 
 </pre>
 </div>
-<div title="Etykieciarka" creator="zasvid" modifier="zasvid" created="201203280954" modified="201204220928" changecount="9">
+<div title="Etykieciarka" creator="zasvid" modifier="zasvid" created="201203280954" modified="201206091734" changecount="10">
 <pre>Rozdział na przeglądarkę i etykieciarkę hOCR
 
 [[Specyfikacja i pytania do niej]]
@@ -570,6 +570,13 @@ Potrzebna dla sklejonych znaków, tzn. sytuacji w którym jeden kształt zawiera
 !!!Tabela rozcięć hierarchii drzew
 *id kształtu, który stracił rodzica
 *metadane rozcięcia : użytkownik, data
+Podsumowując:
+*tabela etykiet
+*tabela etykiety do ksztaltów (id obu tylko)
+*tabela etykiety do znaków unicode
+*tabela znaków unicode
+*tabela logów użytkowników
+*tabela edycji kształtów
 !Współpraca z DjVu4Poliqarp
 *Ewentualnie: przenieść dane z bazy (być może okrojone) z MySQL do SQLite jeśli pan Rudolf będzie chciał używać tego ostatniego.
 *Komunikacja pomiędzy etykieciarką a DjVu4Poliqarp do podglądu kontekstu
@@ -577,9 +584,6 @@ Potrzebna dla sklejonych znaków, tzn. sytuacji w którym jeden kształt zawiera
 !!Unicode
 *napisy w unicode
 *normalizacja niejednoznacznych kodów Unicode (kanoniczne: NFD lub NFC)
-!!Technologia
-*wxPython
-*wykorzystać fragmenty kodu gamery?
 !!Segmentacja z Gamery
 * holistyczna
 * coś innego do hOCR
@@ -614,8 +618,7 @@ rsync -av psikora@kanji.klf.uw.edu.pl:/host/DjVu_shapes .
 *skleić 2 próbki</pre>
 </div>
 <div title="Linki" creator="zasvid" modifier="zasvid" created="201204271002" changecount="1">
-<pre>
-http://fleksem.klf.uw.edu.pl/~jsbien/SJPDorI/SJPDorI/</pre>
+<pre>http://fleksem.klf.uw.edu.pl/~jsbien/SJPDorI/SJPDorI/</pre>
 </div>
 <div title="MainMenu" creator="zasvid" modifier="zasvid" created="201201282244" modified="201204271002" changecount="7">
 <pre>[[Etykieciarka]]
