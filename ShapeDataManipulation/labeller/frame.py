@@ -15,12 +15,15 @@ import shelve
 import os.path
 
 import djvusmooth.models.text
+from djvusmooth.gui.page import PageWidget, PercentZoom, OneToOneZoom, StretchZoom, FitWidthZoom, FitPageZoom
 
-
+from djvusmooth.i18n import _
 import djvu.decode
 import djvu.const
 
 from internal.frame import DjVuShapeToolsFrame
+from labeller.utils import page_of_hocr_data
+
 
 class hOCRLabeller(DjVuShapeToolsFrame):
     
@@ -39,7 +42,13 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._add_menu_item(menu, text = 'Otwórz pliki z &hOCR', help = 'Wyświetla okno wybór plików zawierających dane hOCR', binding = self.OnLoadHOCR)
         self._add_menu_item(menu, '&Wyjście', 'Wyjdź z programu', binding = self.OnQuit)
         self.menubar.Append(menu, '&Dane')
-        
+    
+        menu = wx.Menu()
+        self._add_menu_item(menu, '&Następny wiersz', 'Przejdź do następnego wiersza', binding = self.OnNextLine)
+        self._add_menu_item(menu, '&Poprzedni wiersz', 'Przejdź do poprzedniego wiersza', binding = self.OnPrevLine)
+        self.menubar.Append(menu, '&hOCR')
+    
+        self.menubar.Append(self._create_view_menu(), _('&View'))
 
         #tool = toolbar.AddLabelTool(wx.ID_ANY, 'Prz', wx.Bitmap('texit.png'))
         #TODO: make icons
@@ -50,6 +59,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         
         panel = self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
+        self.page_widget = self.context_panel.page_widget
         
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
         panel = self.labelling_panel = wx.Panel(parent = self, )
@@ -62,7 +72,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.SetSizer(mainSizer)
 
         #TODO: global binding of keystrokes
-        self.context_panel.page_widget.Bind(wx.EVT_CHAR, self.on_char)
+        self.page_widget.Bind(wx.EVT_CHAR, self.on_char)
 
         self.Maximize()
         self.Centre()
@@ -70,30 +80,41 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     
     def OnChooseDocument(self, event):
         self.choose_document()
+        self.data_hocr.clear()
     
     def OnLoadHOCR(self, event):
         self.load_hocr_data()
+    
+    def OnNextLine(self, event):
+        self.data_hocr.text_model.next_line()
+
+    def OnPrevLine(self, event):
+        self.data_hocr.text_model.prev_line()
         
     def load_hocr_data(self):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")
+        doc_name = self.data.current_document.name
         if path is not None:
             listing = os.listdir(path)
             for filename in listing:
                 print(filename)
-                if filename == self.data.current_document.name:
+                if filename == doc_name:
                     self.open_djvu_file(filename)
                 else:
-                    pass
+                    test = page_of_hocr_data(filename, doc_name)
+                    if test is not None:
+                        page_no , hocr_page = test
+                        self.data_hocr.add_page(page_no, hocr_page)
             
     def open_djvu_file(self, filename):
         try:
             self.data_hocr.document = self.context.new_document(djvu.decode.FileURI(filename))
-            self.data_hocr.text_model = TextModel(self.data_hocr.document)
+            self.data_hocr.make_text_model()
             self.data_hocr.page_no = 0 # again, to set status bar text
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
-            self.context_panel.Refresh()
-            self.context_panel.Update()
+            self.Refresh()
+            self.Update()
         except djvu.decode.JobFailed:
             self.data_hocr.text_model = None
             self.data_hocr.document = None
@@ -135,7 +156,114 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         if self.choose_document():
             self.load_hocr_data()
 
-#DJVUSMOOTH code
+# Code taken from DJVUSMOOTH 
+# 
+# Copyright © 2008, 2009, 2010, 2011 Jakub Wilk <jwilk@jwilk.net>
+# Copyright © 2009 Mateusz Turcza <mturcza@mimuw.edu.pl>
+#
+# This package is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 dated June, 1991.
+#
+# This package is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+
+    def _create_view_menu(self):
+        menu = wx.Menu()
+        submenu = wx.Menu()
+        for caption, help, method, id in \
+        [
+            (_('Zoom &in'),  _('Increase the magnification'), self.on_zoom_in, wx.ID_ZOOM_IN),
+            (_('Zoom &out'), _('Decrease the magnification'), self.on_zoom_out, wx.ID_ZOOM_OUT),
+        ]:
+            self._add_menu_item(submenu, caption, help, method, id = id or wx.ID_ANY)
+        submenu.AppendSeparator()
+        for caption, help, zoom, id in \
+        [
+            (_('Fit &width'),  _('Set magnification to fit page width'),  FitWidthZoom(), None),
+            (_('Fit &page'),   _('Set magnification to fit page'),        FitPageZoom(),  wx.ID_ZOOM_FIT),
+            (_('&Stretch'),    _('Stretch the image to the window size'), StretchZoom(),  None),
+            (_('One &to one'), _('Set full resolution magnification.'),   OneToOneZoom(), wx.ID_ZOOM_100),
+        ]:
+            self._add_menu_item(submenu, caption, help, self.on_zoom(zoom), kind=wx.ITEM_RADIO, id = id or wx.ID_ANY)
+        submenu.AppendSeparator()
+        self.zoom_menu_items = {}
+        for percent in 300, 200, 150, 100, 75, 50, 25:
+            item = self._add_menu_item(
+                submenu,
+                '%d%%' % percent,
+                _('Magnify %d%%') % percent,
+                self.on_zoom(PercentZoom(percent)),
+                kind=wx.ITEM_RADIO
+            )
+            if percent == 100:
+                item.Check()
+            self.zoom_menu_items[percent] = item
+        menu.AppendMenu(wx.ID_ANY, _('&Zoom'), submenu)
+        """
+        submenu = wx.Menu()
+        for caption, help, method in \
+        [
+            (_('&Color') + '\tAlt+C', _('Display everything'),                                            self.on_display_everything),
+            (_('&Stencil'),           _('Display only the document bitonal stencil'),                     self.on_display_stencil),
+            (_('&Foreground'),        _('Display only the foreground layer'),                             self.on_display_foreground),
+            (_('&Background'),        _('Display only the background layer'),                             self.on_display_background),
+            (_('&None') + '\tAlt+N',  _('Neither display the foreground layer nor the background layer'), self.on_display_none)
+        ]:
+            self._menu_item(submenu, caption, help, method, style=wx.ITEM_RADIO)
+        menu.AppendMenu(wx.ID_ANY, _('&Image'), submenu)
+        submenu = wx.Menu()
+        _tmp_items = []
+        for caption, help, method in \
+        [
+            (_('&None'),                   _('Don\'t display non-raster data'),   self.on_display_no_nonraster),
+            (_('&Hyperlinks') + '\tAlt+H', _('Display overprinted annotations'), self.on_display_maparea),
+            (_('&Text') + '\tAlt+T',       _('Display the text layer'),          self.on_display_text),
+        ]:
+            _tmp_items += self._add_menu_item(submenu, caption, help, method, kind=wx.ITEM_RADIO),
+        self._menu_item_display_no_nonraster, self._menu_item_display_maparea, self._menu_item_display_text = _tmp_items
+        del _tmp_items
+        self._menu_item_display_no_nonraster.Check()
+        menu.AppendMenu(wx.ID_ANY, _('&Non-raster data'), submenu)
+        """
+        self._add_menu_item(menu, _('&Refresh') + '\tCtrl+L', _('Refresh the window'), self.on_refresh)
+        return menu
+
+    def do_percent_zoom(self, percent):
+        self.page_widget.zoom = PercentZoom(percent)
+        self.zoom_menu_items[percent].Check()
+
+    def on_zoom_out(self, event):
+        try:
+            percent = self.page_widget.zoom.percent
+        except ValueError:
+            return # FIXME
+        candidates = [k for k in self.zoom_menu_items.iterkeys() if k < percent]
+        if not candidates:
+            return
+        self.do_percent_zoom(max(candidates))
+
+    def on_zoom_in(self, event):
+        try:
+            percent = self.page_widget.zoom.percent
+        except ValueError:
+            return # FIXME
+        candidates = [k for k in self.zoom_menu_items.iterkeys() if k > percent]
+        if not candidates:
+            return
+        self.do_percent_zoom(min(candidates))
+
+
+    def on_zoom(self, zoom):
+        def event_handler(event):
+            self.page_widget.zoom = zoom
+        return event_handler
+
+    def on_refresh(self, event):
+        self.Refresh()
+
 
     def on_char(self, event):
         key_code = event.GetKeyCode()
@@ -160,16 +288,4 @@ class Context(djvu.decode.Context):
     def handle_message(self, message):
         wx.PostEvent(self.window, WxDjVuMessage(message=message))
 
-class TextModel(djvusmooth.models.text.Text):
-
-    def __init__(self, document):
-        djvusmooth.models.text.Text.__init__(self)
-        self._document = document
-
-    def reset_document(self, document):
-        self._document = document
-
-    def acquire_data(self, n):
-        text = self._document.pages[n].text
-        text.wait()
-        return text.sexpr    
+ 

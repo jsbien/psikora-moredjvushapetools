@@ -5,7 +5,7 @@
 
 import wx
 import wx.lib.scrolledpanel
-from djvusmooth.gui.page import PageWidget
+from djvusmooth.gui.page import PageWidget, FitPageZoom
 from djvusmooth.gui.page import RENDER_NONRASTER_TEXT
 
 class ContextPanel(wx.lib.scrolledpanel.ScrolledPanel):
@@ -21,6 +21,7 @@ class ContextPanel(wx.lib.scrolledpanel.ScrolledPanel):
         self.SetupScrolling()
         self.page_widget = PageWidget(self)
         self.page_widget.render_nonraster = RENDER_NONRASTER_TEXT
+        self.page_widget.zoom = FitPageZoom()
         sizer.Add(self.page_widget, 0, wx.ALL, 0)
         self.page = self.page_job = self.page_proxy = self.document_proxy = None
         self.Bind(wx.EVT_SIZE, self.page_widget.on_parent_resize)

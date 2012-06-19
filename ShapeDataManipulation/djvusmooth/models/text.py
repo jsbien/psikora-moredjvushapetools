@@ -14,11 +14,14 @@
 # General Public License for more details.
 
 '''
-Models for hidden text.
+Models for hOCR text.
 
 See Lizardtech DjVu Reference (DjVu 3):
 - 3.3.2 Hidden text.
 - 8.3.5 Text Chunk.
+
+hOCR documentation
+https://docs.google.com/document/preview?id=1QQnIQtvdAC_8n92-LhwPcjtAUFwBlzE8EWnKAxlgVf0
 '''
 
 import copy
@@ -338,6 +341,17 @@ class PageText(object):
         self._original_sexpr = original_data
         self.revert()
         self._n = n
+        self._current_line = 0
+        
+    def get_current_node(self):
+        return self.current_line
+
+    def get_current_line(self):
+        return self._current_line
+    def set_current_line(self, value):
+        self._current_line = value
+        self.notify_tree_change()
+    current_line = property(get_current_line, set_current_line)
 
     def register_callback(self, callback):
         if not isinstance(callback, PageTextCallback):
@@ -357,6 +371,7 @@ class PageText(object):
                 return None
             return self._root.sexpr
         def set(self, sexpr):
+            print("Roar")
             if sexpr:
                 self._root = Node(sexpr, self)
             else:
@@ -365,6 +380,7 @@ class PageText(object):
         return property(get, set)
 
     def strip(self, zone_type):
+        print("Strippers")
         zone_type = djvu.const.get_text_zone_type(zone_type) # ensure it's not a plain Symbol
         if self._root is None:
             return
@@ -448,4 +464,3 @@ def _get_leafs(node):
 
 __all__ = 'Text', 'PageText'
 
-# vim:ts=4 sw=4 et

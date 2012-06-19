@@ -673,13 +673,18 @@ class PageWidget(wx.lib.ogl.ShapeCanvas):
     def setup_text_shapes(self, have_text = False):
         xform_text_to_screen = self._xform_text_to_screen
         try:
-            page_type = sexpr.Symbol('page')
+            
             items = \
             [
                 (node, TextShape(node, have_text, xform_text_to_screen))
-                for node in self._page_text.get_preorder_nodes()
+                for node  in self._page_text.get_preorder_nodes()
                 if node is not None and node.type < djvu.const.TEXT_ZONE_PAGE
             ]
+            node = self._page_text.get_current_node()
+            if node is not None:
+                items = [items[node]]
+            else:
+                items = []
             self._nonraster_shapes = tuple(shape for node, shape in items)
             self._nonraster_shapes_map = dict(items)
         except decode.NotAvailable:
