@@ -9,8 +9,9 @@ import wx.lib.newevent
 import wx.lib.scrolledpanel
 
 
-from hocr import DatahOCR
+from hocr_data import DatahOCR
 from labeller.context import ContextPanel
+from labeller.labelling import LabellingPanel
 import shelve
 import os.path
 
@@ -44,8 +45,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.menubar.Append(menu, '&Dane')
     
         menu = wx.Menu()
-        self._add_menu_item(menu, '&Następny wiersz', 'Przejdź do następnego wiersza', binding = self.OnNextLine)
-        self._add_menu_item(menu, '&Poprzedni wiersz', 'Przejdź do poprzedniego wiersza', binding = self.OnPrevLine)
+        self._add_menu_item(menu, '&Następny wiersz' + '\tCtrl+N', 'Przejdź do następnego wiersza', binding = self.OnNextLine)
+        self._add_menu_item(menu, '&Poprzedni wiersz' + '\tCtrl+P', 'Przejdź do poprzedniego wiersza', binding = self.OnPrevLine)
         self.menubar.Append(menu, '&hOCR')
     
         self.menubar.Append(self._create_view_menu(), _('&View'))
@@ -62,11 +63,14 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.page_widget = self.context_panel.page_widget
         
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
-        panel = self.labelling_panel = wx.Panel(parent = self, )
+        panel = self.labelling_panel = LabellingPanel(parent = self,  data = self.data, data_hocr = self.data_hocr)
         panel.SetBackgroundColour('#00ff00')
+        
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
+        
         panel = self.shapes_panel = wx.Panel(self)
         panel.SetBackgroundColour('#0000ff')
+        
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
         
         self.SetSizer(mainSizer)
@@ -87,9 +91,11 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     
     def OnNextLine(self, event):
         self.data_hocr.text_model.next_line()
+        self.labelling_panel.regenerate()
 
     def OnPrevLine(self, event):
         self.data_hocr.text_model.prev_line()
+        self.labelling_panel.regenerate()
         
     def load_hocr_data(self):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")
@@ -113,8 +119,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             self.data_hocr.page_no = 0 # again, to set status bar text
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
-            self.Refresh()
-            self.Update()
+            self.labelling_panel.regenerate()
         except djvu.decode.JobFailed:
             self.data_hocr.text_model = None
             self.data_hocr.document = None

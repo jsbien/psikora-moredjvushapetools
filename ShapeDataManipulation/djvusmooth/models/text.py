@@ -344,7 +344,13 @@ class PageText(object):
         self._current_line = 0
         
     def get_current_node(self):
-        return self.current_line
+        items = \
+            [
+                node
+                for node in self.get_preorder_nodes()
+                if node is not None and node.type < djvu.const.TEXT_ZONE_PAGE
+            ]
+        return items[self.current_line]
 
     def get_current_line(self):
         return self._current_line
