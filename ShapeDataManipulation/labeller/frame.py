@@ -61,6 +61,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         
         panel = self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
         self.page_widget = self.context_panel.page_widget
+        self.page_widget.render_mode = djvu.decode.RENDER_FOREGROUND
         
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
         panel = self.labelling_panel = LabellingPanel(parent = self,  data = self.data, data_hocr = self.data_hocr)
@@ -207,7 +208,6 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                 item.Check()
             self.zoom_menu_items[percent] = item
         menu.AppendMenu(wx.ID_ANY, _('&Zoom'), submenu)
-        """
         submenu = wx.Menu()
         for caption, help, method in \
         [
@@ -217,8 +217,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             (_('&Background'),        _('Display only the background layer'),                             self.on_display_background),
             (_('&None') + '\tAlt+N',  _('Neither display the foreground layer nor the background layer'), self.on_display_none)
         ]:
-            self._menu_item(submenu, caption, help, method, style=wx.ITEM_RADIO)
+            self._add_menu_item(submenu, caption, help, method, kind=wx.ITEM_RADIO)
         menu.AppendMenu(wx.ID_ANY, _('&Image'), submenu)
+        """
         submenu = wx.Menu()
         _tmp_items = []
         for caption, help, method in \
@@ -269,6 +270,20 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def on_refresh(self, event):
         self.Refresh()
 
+    def on_display_everything(self, event):
+        self.page_widget.render_mode = djvu.decode.RENDER_COLOR
+
+    def on_display_foreground(self, event):
+        self.page_widget.render_mode = djvu.decode.RENDER_FOREGROUND
+
+    def on_display_background(self, event):
+        self.page_widget.render_mode = djvu.decode.RENDER_BACKGROUND
+
+    def on_display_stencil(self, event):
+        self.page_widget.render_mode = djvu.decode.RENDER_BLACK
+
+    def on_display_none(self, event):
+        self.page_widget.render_mode = None
 
     def on_char(self, event):
         key_code = event.GetKeyCode()
