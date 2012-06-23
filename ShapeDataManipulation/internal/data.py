@@ -69,8 +69,9 @@ class ShapeData:
     def cut_off(self, shape):
         if shape.parent is not None:
             shape.parent.children.remove(shape)
+            parent_db_id = shape.parent_db_id
             shape.parent = None
             shape.parent_db_id = -1
             self.shape_hierarchies.append(shape)
-            self.db_manipulator.shape_edit(shape_id = shape.db_id, prev_parent_id = shape.parent_db_id, new_parent_id = -1)
+            self.db_manipulator.shape_edit(shape_id = shape.db_id, prev_parent_id = parent_db_id, new_parent_id = -1)
 
