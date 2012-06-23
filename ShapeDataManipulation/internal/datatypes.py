@@ -52,10 +52,10 @@ class Shape:
 
     def get_image(self):
         if self.image == None:
-            self.image = self.decode_image()
+            self.image = self._decode_image()
         return self.image
 
-    def decode_image(self):
+    def _decode_image(self):
         def behead(pbm, width, height):
             ''' 
             GUTF8String head;
@@ -96,20 +96,20 @@ class Shape:
             linearised_hierarchy.extend(child.linearise_hierarchy())
         return linearised_hierarchy
     
-    def depth(self):
-        max_depth = 1
+    def hierarchy_height(self):
+        max_height = 0
         for child in self.children:
-            if child.depth() + 1 > max_depth:
-                max_depth = child.depth() + 1
-        return max_depth
+            if child.hierarchy_height() + 1 > max_height:
+                max_height = child.hierarchy_height() + 1
+        return max_height
     
-    def hierarchyheight(self):
-        height = 1
+    def hierarchy_depth(self):
+        depth = 0
         current_shape = self
         while current_shape.parent is not None:
-            height += 1
+            depth += 1
             current_shape = current_shape.parent 
-        return height
+        return depth
     
     def isAncestorOf(self, shape):
         current_shape = shape

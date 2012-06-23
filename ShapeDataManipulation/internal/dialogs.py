@@ -25,6 +25,8 @@ class ChooseDocumentDialog(wx.Dialog):
                 selection = i
         
         self.listbox.Select(selection)
+        self.listbox.SetFocus()
+        
         
         sizer.Add(self.listbox, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -72,6 +74,7 @@ class ChooseDictionaryDialog(wx.Dialog):
                 selection = i
         
         self.listbox.Select(selection)
+        self.listbox.SetFocus()
 
         sizer.Add(self.listbox, 1, wx.EXPAND | wx.ALL, 5)
 

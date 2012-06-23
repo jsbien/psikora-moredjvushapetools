@@ -48,7 +48,7 @@ class NodeShape(wx.lib.ogl.RectangleShape):
         self._node = node
         self._update_size()
         self._text_color = self._get_frame_color()
-        self._text_pen = wx.Pen(self._text_color, 1)
+        self._text_pen = wx.Pen(self._text_color, 3)
         self._selection_color = self._get_selection_color()
         self._selection_pen = wx.Pen(self._selection_color, 1)
         self.SetBrush(wx.TRANSPARENT_BRUSH)
@@ -174,7 +174,7 @@ class TextShape(NodeShape):
         djvu.const.TEXT_ZONE_COLUMN:    (0x80, 0x80, 0x00),
         djvu.const.TEXT_ZONE_REGION:    (0x80, 0x80, 0x80),
         djvu.const.TEXT_ZONE_PARAGRAPH: (0x80, 0x00, 0x00),
-        djvu.const.TEXT_ZONE_LINE:      (0x80, 0x00, 0x80),
+        djvu.const.TEXT_ZONE_LINE:      (0xFF, 0x00, 0x00),
         djvu.const.TEXT_ZONE_WORD:      (0x00, 0x00, 0x80),
         djvu.const.TEXT_ZONE_CHARACTER: (0x00, 0x80, 0x00),
     }

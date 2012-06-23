@@ -33,9 +33,19 @@ class _ShapePanel(wx.Panel):
         shapeImage = wx.StaticBitmap(self, -1, PilImageToWxBitmap(self.shape.get_image()))
         sizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, shape_image_margin)
         
+        tooltip_text = "Poziom węzła: " + str(shape.hierarchy_depth()+1) + '\n'
+        #tooltip_text += "Gałąź drzewa: " + str(0) + '\n'
+        tooltip_text += "Wielkość poddrzewa: " + str(shape.count_descendants()) + '\n'
+        tooltip_text += "Wysokość poddrzewa: " + str(shape.hierarchy_height())
+        
+        
+        tooltip = wx.ToolTip(tooltip_text) 
+        
         self.SetSizer(sizer)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
         shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
+        self.SetToolTip(tooltip)
+        shapeImage.SetToolTip(tooltip)
         if self.parent.data.labelling:
             self.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
             shapeImage.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
@@ -133,8 +143,8 @@ class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
         
         for shape_panel in self.shape_panels:
             if shape_panel.shape.isAncestorOf(shape):
-                shape_panel.highlightAncestor(shape_panel.shape.hierarchyheight(), shape.hierarchyheight())
+                shape_panel.highlightAncestor(shape_panel.shape.hierarchy_depth(), shape.hierarchy_depth())
                 self.highlighted_panels.append(shape_panel)
             elif shape_panel.shape.isDescendantOf(shape):
-                shape_panel.highlightDescendant(shape_panel.shape.hierarchyheight() - shape.hierarchyheight(), shape.depth())
+                shape_panel.highlightDescendant(shape_panel.shape.hierarchy_depth() - shape.hierarchy_depth(), shape.hierarchy_height())
                 self.highlighted_panels.append(shape_panel)
