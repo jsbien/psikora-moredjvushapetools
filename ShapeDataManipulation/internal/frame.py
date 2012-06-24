@@ -10,13 +10,30 @@ from internal.data import ShapeData
 
 class DjVuShapeToolsFrame(wx.Frame):
     
+    def _add_menu_item_by_key(self, menu, menu_key, binding, kind = wx.ITEM_NORMAL, id = wx.ID_ANY):
+        text, help = self._menuitem_strings[menu_key]
+        item =  self._add_menu_item(menu, text, help, binding, kind, id)
+        self._menu_items[menu_key] = item
+        return item
+    
     def _add_menu_item(self, menu, text, help, binding, kind = wx.ITEM_NORMAL, id = wx.ID_ANY):
         item = menu.Append(id, text, help, kind)
         self.Bind(wx.EVT_MENU, binding, item)
         return item
     
+    def _append_menu(self, menubar, menu, menu_string):
+        menubar.Append(menu, self._menu_strings[menu_string])
+        self._menus[menu_string] = menu
+
+    def _enable_menu_item(self, menu_key, menuitem_key, enable = True):
+        menu = self._menus[menu_key] 
+        menuitem_id = self._menu_items[menuitem_key].GetId()
+        menu.Enable(menuitem_id, enable) 
+    
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, *args, **kwargs)
+        self._menu_strings = {}
+        self._menuitem_strings = {}
         self.data = ShapeData()
 
         # binding general behaviour
@@ -27,7 +44,8 @@ class DjVuShapeToolsFrame(wx.Frame):
         self.SetMenuBar(self.menubar)
         self.toolbar = self.CreateToolBar()
         self.new_document = False
-
+        self._menu_items = {}
+        self._menus = {}
         
     def connect_to_database(self, db_name, db_host, db_user, db_pass):
         if hasattr(self,'db_manipulator'):
@@ -50,7 +68,7 @@ class DjVuShapeToolsFrame(wx.Frame):
             self.data.current_hierarchy = None
             self.data.current_shape = None
             self.new_document = True
-        return (self.data.current_document is not None, )
+        return self.data.current_document is not None
         #TODO: use Observers to observe when document changes (or at least check for change here)
 
     def OnChooseDictionary(self, event):

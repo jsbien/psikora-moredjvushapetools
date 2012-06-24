@@ -26,6 +26,7 @@ from internal.frame import DjVuShapeToolsFrame
 from labeller.utils import page_of_hocr_data
 
 
+
 class hOCRLabeller(DjVuShapeToolsFrame):
     
     def __init__(self, *args, **kwargs):
@@ -37,19 +38,37 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.last_visited_directory = None
         self.context = Context(self)
         
+        self._menuitem_strings = { 'ChooseDocument': ['Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy'],
+                'LoadHOCR': ['Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR'],
+                'Quit': ['&Wyjście', 'Wyjdź z programu'],
+                'NextLine': ['&Następny wiersz' + '\tCtrl+N', 'Przejdź do następnego wiersza'],
+                'PrevLine': ['&Poprzedni wiersz' + '\tCtrl+P', 'Przejdź do poprzedniego wiersza']                
+                }
+        self._menu_strings = { 'Data' : '&Dane',
+                              'View' : _('&View'),
+                              'hOCR' : '&hOCR',
+                              '' : ''
+                            }
+        
         # menu - database
         menu = wx.Menu()
-        self._add_menu_item(menu, 'Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy', self.OnChooseDocument)
-        self._add_menu_item(menu, text = 'Otwórz pliki z &hOCR', help = 'Wyświetla okno wybór plików zawierających dane hOCR', binding = self.OnLoadHOCR)
-        self._add_menu_item(menu, '&Wyjście', 'Wyjdź z programu', binding = self.OnQuit)
-        self.menubar.Append(menu, '&Dane')
+        self._add_menu_item_by_key(menu, 'ChooseDocument', self.OnChooseDocument)
+        self._add_menu_item_by_key(menu, 'LoadHOCR', binding = self.OnLoadHOCR)
+        
+        
+        self._add_menu_item_by_key(menu, 'Quit', binding = self.OnQuit)
+        self._append_menu(self.menubar, menu, 'Data')
+        self._enable_menu_item('Data', 'LoadHOCR', False)
+    
     
         menu = wx.Menu()
-        self._add_menu_item(menu, '&Następny wiersz' + '\tCtrl+N', 'Przejdź do następnego wiersza', binding = self.OnNextLine)
-        self._add_menu_item(menu, '&Poprzedni wiersz' + '\tCtrl+P', 'Przejdź do poprzedniego wiersza', binding = self.OnPrevLine)
-        self.menubar.Append(menu, '&hOCR')
-    
-        self.menubar.Append(self._create_view_menu(), _('&View'))
+        self._add_menu_item_by_key(menu, 'NextLine', binding = self.OnNextLine)
+        self._add_menu_item_by_key(menu, 'PrevLine', binding = self.OnPrevLine)
+        
+        self._append_menu(self.menubar, menu, 'hOCR')
+        
+        
+        self._append_menu(self.menubar, self._create_view_menu(), 'View')
 
         #tool = toolbar.AddLabelTool(wx.ID_ANY, 'Prz', wx.Bitmap('texit.png'))
         #TODO: make icons
@@ -65,7 +84,6 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
         panel = self.labelling_panel = LabellingPanel(parent = self,  data = self.data, data_hocr = self.data_hocr)
-        panel.SetBackgroundColour('#00ff00')
         
         mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
         
@@ -84,8 +102,14 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.Show(True)
     
     def OnChooseDocument(self, event):
-        self.choose_document()
-        self.data_hocr.clear()
+        self.choose_document_for_labelling()
+            
+    def choose_document_for_labelling(self):
+        if self.choose_document():
+            self._enable_menu_item('Data', 'LoadHOCR')
+            self.data_hocr.clear()
+            return True
+        return False
     
     def OnLoadHOCR(self, event):
         self.load_hocr_data()
