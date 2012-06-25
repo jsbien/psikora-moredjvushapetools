@@ -128,20 +128,17 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         if path is not None:
             listing = os.listdir(path)
             for filename in listing:
-                print(filename)
-                if filename == doc_name:
-                    self.open_djvu_file(filename)
-                else:
-                    test = page_of_hocr_data(filename, doc_name)
-                    if test is not None:
-                        page_no , hocr_page = test
-                        self.data_hocr.add_page(page_no, hocr_page)
+                page_data = page_of_hocr_data(filename, doc_name)
+                if page_data is not None:
+                    page_no, hocr_page = page_data
+                    self.data_hocr.add_page(page_no, hocr_page)
+            self.open_djvu_file(doc_name)
+
             
     def open_djvu_file(self, filename):
         try:
             self.data_hocr.document = self.context.new_document(djvu.decode.FileURI(filename))
-            self.data_hocr.make_text_model()
-            self.data_hocr.page_no = 0 # again, to set status bar text
+            self.data_hocr.make_text_model([self])
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
             self.labelling_panel.regenerate()
@@ -185,6 +182,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             self.load_session() 
         if self.choose_document():
             self.load_hocr_data()
+
+    def notify_page_change(self):
+        self.context_panel.update_page_widget(new_page= True)
 
 # Code taken from DJVUSMOOTH 
 # 

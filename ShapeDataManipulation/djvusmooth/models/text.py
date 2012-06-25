@@ -257,7 +257,12 @@ class InnerNode(Node):
 
     @apply
     def text():
-        return property()
+        def get(self):
+            text = ''
+            for child in self._children:
+                text += child.text
+            return text
+        return property(get)
 
     @apply
     def left_child():
@@ -342,15 +347,21 @@ class PageText(object):
         self.revert()
         self._n = n
         self._current_line = 0
+        self._lines = None
         
     def get_current_node(self):
-        items = \
-            [
-                node
-                for node in self.get_preorder_nodes()
-                if node is not None and node.type < djvu.const.TEXT_ZONE_PAGE
-            ]
-        return items[self.current_line]
+        return self.lines[self.current_line]
+
+    def get_lines(self):
+        if self._lines is None:
+            self._lines = \
+                [
+                 node
+                 for node in self.get_preorder_nodes()
+                 if node is not None and node.type == djvu.const.TEXT_ZONE_LINE
+                ]
+        return self._lines
+    lines = property(get_lines)
 
     def get_current_line(self):
         return self._current_line
@@ -377,7 +388,6 @@ class PageText(object):
                 return None
             return self._root.sexpr
         def set(self, sexpr):
-            print("Roar")
             if sexpr:
                 self._root = Node(sexpr, self)
             else:
@@ -429,7 +439,7 @@ class PageText(object):
         self._dirty = True
         for callback in self._callbacks:
             callback.notify_tree_change(self._root)
-
+            
     def get_preorder_nodes(self):
         if self.root is None:
             return ()

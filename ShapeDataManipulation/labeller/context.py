@@ -34,11 +34,11 @@ class ContextPanel(wx.lib.scrolledpanel.ScrolledPanel):
             self.page = self.page_job = self.page_proxy = self.document_proxy = None
         elif self.page_job is None or new_page:
             self.page_widget.Show()
-            self.page = self.data_hocr.document.pages[self.data_hocr.page_no]
+            self.page = self.data_hocr.current_page_djvu
             self.page_job = self.page.decode(wait = False)
             self.page_proxy = PageProxy(
                 page = self.page,
-                text_model = self.data_hocr.text_model[self.data_hocr.page_no],
+                text_model = self.data_hocr.current_text_model,
                 #annotations_model = self.annotations_model[self.page_no]
             )
             #self.page_proxy.register_text_callback(self._page_text_callback)
