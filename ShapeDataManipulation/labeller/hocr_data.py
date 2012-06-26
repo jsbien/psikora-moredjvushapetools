@@ -14,6 +14,8 @@ class DatahOCR:
         self.hocr_pages = {}
         
         self.text_model = None
+        self._page_range = None
+        self._page_no_mod = None
         
     def add_page(self, page_no, hocr_page):
         self.hocr_pages[page_no] = hocr_page
@@ -34,9 +36,24 @@ class DatahOCR:
     current_text_model = property(_get_current_text_model)    
 
     def _get_current_page_djvu(self):
-        return self.document.pages[self.page_no - 1]
+        return self.document.pages[self._page_no_translation(self.page_no)]
     current_page_djvu = property(_get_current_page_djvu)    
 
+    def _page_no_translation(self, page_no):
+        if self._page_no_mod is None:
+            if self.page_range[0] > 0 and self.page_range[1] == len(self.document.pages):
+                self._page_no_mod = -1
+            else:
+                self._page_no_mod = 0
+        return page_no + self._page_no_mod
+    
+    def _get_page_range(self):
+        if self._page_range is None:
+            low = min(self.hocr_pages.keys())
+            high = max(self.hocr_pages.keys())
+            self._page_range = (low, high)
+        return self._page_range
+    page_range = property(_get_page_range)
     
 class TextModel(djvusmooth.models.text.Text):
 
@@ -62,7 +79,7 @@ class TextModel(djvusmooth.models.text.Text):
         greater_pages = [
                        page_no
                        for page_no in self._pages_data.keys()
-                       if page_no > self._current_page
+                       if page_no > self._current_page and self._pages_data[page_no] is not None
                        ]
         if greater_pages:
             self.current_page = min(greater_pages)
@@ -72,7 +89,7 @@ class TextModel(djvusmooth.models.text.Text):
         lesser_pages = [
                        page_no
                        for page_no in self._pages_data.keys()
-                       if page_no < self._current_page
+                       if page_no < self._current_page and self._pages_data[page_no] is not None
                        ]
         if lesser_pages:
             self.current_page = max(lesser_pages)
