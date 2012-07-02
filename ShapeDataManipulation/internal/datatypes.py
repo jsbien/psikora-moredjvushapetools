@@ -20,6 +20,26 @@ class ShapeDictionary:
     def is_inherited(self):
         return self.page == -1
         
+class Blit:
+    
+    def __init__(self, blit_data):
+        self.db_id, self.doc_id, self.page_number, self.shape_id, self.b_left, self.b_bottom = blit_data
+        self.w = None
+        self.h = None
+        self.shape = None
+        
+    def get_x(self):
+        return self.b_left
+    x = property(get_x) 
+    
+    def get_y(self):
+        return self.b_bottom
+    y = property(get_y)
+        
+    def __str__(self):
+        return "Blit " + str(self.db_id) + " from doc: " + str(self.doc_id) + " page: " + str(self.page_number) + \
+            " of shape: " + str(self.shape_id) + " at: " + str(self.b_left) + ', ' + str(self.b_bottom)
+        
         
 class BoundingBox:
     def __init__(self, top, left, right, bottom):            
@@ -43,6 +63,7 @@ class Shape:
         self.size = (width, height)
         self.bounding_box = BoundingBox(bbox_top,bbox_left,bbox_right,bbox_bottom)
         self.image = None
+        self.label = None
         
         self.hierarchy_count = None
         self.hierarchy_max_size = None
@@ -130,3 +151,15 @@ class Shape:
             return childwidth
         else:
             return 1
+        
+class Label:
+    
+    def __init__(self, db_id, unicode_chars, ):
+        pass
+    
+class UnicodeChar:
+    
+    def __init__(self, db_id, character, name):
+        self.db_id = db_id
+        self.character = character
+        self.name = name   

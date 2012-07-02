@@ -11,9 +11,10 @@ from internal.image_conversion import PilImageToWxBitmap
 
 class LabelPanel(wx.Panel):
     
-    def __init__(self, data, *args, **kwargs):
+    def __init__(self, data, labelling = False, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
 
+        self.labelling = labelling
         self.data = data
         staticbox = wx.StaticBox(self, label = 'Dane kształtu')
         sizer = wx.StaticBoxSizer(staticbox, orient = wx.VERTICAL)
@@ -50,9 +51,10 @@ class LabelPanel(wx.Panel):
             #sizer.Add(currentShape, 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             self.label_layout(sizer, "Dokument:", str(self.data.current_document.name))
             self.label_layout(sizer, "Adres dokumentu:", str(self.data.current_document.address))
-            self.label_layout(sizer, "Nazwa słownika kształtów: ", str(self.data.current_dictionary.name))
-            self.label_layout(sizer, "Liczba hierarchii w słowniku: ", str(len(self.data.shape_hierarchies)))
-            self.label_layout(sizer, "Liczba kształtów w słowniku: ", str(len(self.data.shapes)))
+            if not self.labelling:
+                self.label_layout(sizer, "Nazwa słownika kształtów: ", str(self.data.current_dictionary.name))
+                self.label_layout(sizer, "Liczba hierarchii w słowniku: ", str(len(self.data.shape_hierarchies)))
+                self.label_layout(sizer, "Liczba kształtów w słowniku: ", str(len(self.data.shapes)))
             sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             #tu idzie obrazek
             imagepanel = wx.Panel(self.inner_panel)
@@ -76,3 +78,6 @@ class LabelPanel(wx.Panel):
         self.inner_panel.Layout()
         self.inner_panel.Refresh()
         self.inner_panel.Update()
+
+    def save_label(self, unicode_character):
+        pass

@@ -181,6 +181,15 @@ class Node(object):
     def _notify_children_change(self):
         return self._owner.notify_node_children_change(self)
 
+    def get_leafs(self):
+        return _get_leafs(self)
+
+    def get_preorder_nodes(self):
+        return _get_preorder_nodes(self)
+
+    def get_postorder_nodes(self):
+        return _get_postorder_nodes(self)
+
 class LeafNode(Node):
 
     def is_leaf(self):
@@ -189,6 +198,7 @@ class LeafNode(Node):
     def __init__(self, sexpr, owner):
         Node.__init__(self, sexpr, owner)
         self._text = sexpr[5].value.decode('UTF-8', 'replace')
+        self.shapes = []
 
     def _construct_sexpr(self):
         x, y, w, h = self.x, self.y, self.w, self.h
@@ -219,6 +229,8 @@ class LeafNode(Node):
 
     def __iter__(self):
         raise TypeError
+
+    
 
 class InnerNode(Node):
 
@@ -347,27 +359,65 @@ class PageText(object):
         self.revert()
         self._n = n
         self._current_line = 0
+        self._current_word = 0
+        self._current_char = 0
         self._lines = None
+        self._words = None
+        self._chars = None
+        self._current_zone = djvu.const.TEXT_ZONE_LINE
+        self._current_node = 0
         
-    def get_current_node(self):
+    def _get_current_line_node(self):
         return self.lines[self.current_line]
+    current_line_node = property(_get_current_line_node)
 
-    def get_lines(self):
-        if self._lines is None:
-            self._lines = \
-                [
+    def _get_current_char_node(self):
+        return self._get_current_line_chars()[self.current_char]
+    current_char_node = property(_get_current_char_node)
+
+    def _extract_zone_nodes(self, zone):
+        return [
                  node
                  for node in self.get_preorder_nodes()
-                 if node is not None and node.type == djvu.const.TEXT_ZONE_LINE
+                 if node is not None and node.type == zone
                 ]
-        return self._lines
-    lines = property(get_lines)
 
+    def _get_lines(self):
+        if self._lines is None:
+            self._lines = self._extract_zone_nodes(djvu.const.TEXT_ZONE_LINE)
+        return self._lines
+    lines = property(_get_lines)
+
+    def _get_words(self):
+        if self._words is None:
+            self._words = self._extract_zone_nodes(djvu.const.TEXT_ZONE_WORD)
+        return self._words
+    words = property(_get_words)
+
+    def _get_current_line_chars(self):
+        return [
+                 node
+                 for node in self.current_line_node.get_leafs()
+                 if node is not None and node.type == djvu.const.TEXT_ZONE_CHARACTER
+                ]
+    
+    def _get_chars(self):
+        if self._chars is None:
+            self._chars = self._extract_zone_nodes(djvu.const.TEXT_ZONE_CHARACTER)
+        return self._chars
+    chars = property(_get_chars)
+    
+    def get_current_char(self):
+        return self._current_char
+    def set_current_char(self, value):
+        self._current_char = value
+        self.notify_tree_change()
+    current_char = property(get_current_char, set_current_char)
+    
     def get_current_line(self):
         return self._current_line
     def set_current_line(self, value):
         self._current_line = value
-        self.notify_tree_change()
     current_line = property(get_current_line, set_current_line)
 
     def register_callback(self, callback):

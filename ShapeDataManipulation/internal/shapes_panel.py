@@ -55,8 +55,9 @@ class _ShapePanel(wx.Panel):
         self.parent.data.current_shape = self.shape
         if self.parent.currently_selected_subpanel is not None:
             self.parent.currently_selected_subpanel.deselect()
-        self.parent.currently_selected_subpanel = self 
-        self.parent.target_panel.regenerate()
+        self.parent.currently_selected_subpanel = self
+        if self.parent.target_panel is not None: 
+            self.parent.target_panel.regenerate()
         for shape_panel in self.parent.highlighted_panels:
             shape_panel.deselect()
         self.parent.highlighted_panels = []
@@ -98,10 +99,11 @@ class _ShapePanel(wx.Panel):
 
 
 class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
-    def __init__(self, data, target_panel,  *args, **kwargs):
+    def __init__(self, data, target_panel = None, labelling = False, *args, **kwargs):
         wx.lib.scrolledpanel.ScrolledPanel.__init__(self, *args, **kwargs)
         self.data = data
         self.target_panel = target_panel
+        self.labelling = labelling
         self.shape_panels = []
         self.highlighted_panels = []
         self.panel = wx.Panel(self)

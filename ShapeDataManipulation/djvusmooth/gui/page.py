@@ -176,7 +176,7 @@ class TextShape(NodeShape):
         djvu.const.TEXT_ZONE_PARAGRAPH: (0x80, 0x00, 0x00),
         djvu.const.TEXT_ZONE_LINE:      (0xFF, 0x00, 0x00),
         djvu.const.TEXT_ZONE_WORD:      (0x00, 0x00, 0x80),
-        djvu.const.TEXT_ZONE_CHARACTER: (0x00, 0x80, 0x00),
+        djvu.const.TEXT_ZONE_CHARACTER: (0x00, 0xFF, 0x00),
     }
     
     _SELECTION_COLOUR = (0xFF, 0x00, 0x00)
@@ -650,34 +650,21 @@ class PageWidget(wx.lib.ogl.ShapeCanvas):
         have_text = self.render_mode is None
         if self.render_nonraster == RENDER_NONRASTER_TEXT and self._page_text is not None:
             self.setup_text_shapes(have_text)
-        if self.render_nonraster == RENDER_NONRASTER_MAPAREA and self._page_annotations is not None:
-            self.setup_maparea_shapes(have_text)
 
     def clear_nonraster_shapes(self):
         self._nonraster_shapes = ()
         self._nonraster_shapes_map = {}
 
-    def setup_maparea_shapes(self, have_text = False):
-        xform_real_to_screen = self._xform_real_to_screen
-        try:
-            items = \
-            [
-                (node, MapareaShape(node, have_text, xform_real_to_screen))
-                for node in self._page_annotations.mapareas
-            ]
-            self._nonraster_shapes = tuple(shape for node, shape in items)
-            self._nonraster_shapes_map = dict(items)
-        except decode.NotAvailable:
-            pass
-
     def setup_text_shapes(self, have_text = False):
         xform_text_to_screen = self._xform_text_to_screen
         try:
-            node = self._page_text.get_current_node()
+            node = self._page_text.current_line_node
+            items = []
             if node is not None:
-                items = [ (node, TextShape(node, have_text, xform_text_to_screen))]
-            else:
-                items = []
+                items.append((node, TextShape(node, have_text, xform_text_to_screen)))
+            node = self._page_text.current_char_node
+            if node is not None:
+                items.append((node, TextShape(node, have_text, xform_text_to_screen)))    
             self._nonraster_shapes = tuple(shape for node, shape in items)
             self._nonraster_shapes_map = dict(items)
         except decode.NotAvailable:

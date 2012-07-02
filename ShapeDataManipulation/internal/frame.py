@@ -61,6 +61,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         dialog.Destroy()
         if self.data.current_document is not None:
             self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
+            self.data.pages = self.db_manipulator.fetch_pages(self.data.current_document.db_id)
         #reset data after document change
         if self.data.current_document != previous_document:
             self.data.current_dictionary = None
@@ -79,7 +80,9 @@ class DjVuShapeToolsFrame(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
         if self.data.current_dictionary is not None:
-            self.data.fill_shape_dictionary(self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id))
+            self.data.fill_shape_dictionary(
+                        self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id)
+                        )
         self.roots_panel.regenerate()
 
     def OnQuit(self, event):

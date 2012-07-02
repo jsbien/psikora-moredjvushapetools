@@ -12,6 +12,7 @@ import wx.lib.scrolledpanel
 from hocr_data import DatahOCR
 from labeller.context import ContextPanel
 from labeller.labelling import LabellingPanel
+from internal.shapes_panel import ShapesPanel
 import shelve
 import os.path
 
@@ -34,18 +35,24 @@ class hOCRLabeller(DjVuShapeToolsFrame):
 
         wx.lib.ogl.OGLInitialize()
 
-        self.data_hocr = DatahOCR()
+        self.data_hocr = DatahOCR(self.data)
         self.last_visited_directory = None
         self.context = Context(self)
         
         self._menuitem_strings = { 'ChooseDocument': ['Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy'],
                 'LoadHOCR': ['Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR'],
                 'Quit': ['&Wyjście', 'Wyjdź z programu'],
-                'NextLine': ['&Następny wiersz' + '\tCtrl+N', 'Przejdź do następnego wiersza'],
-                'PrevLine': ['&Poprzedni wiersz' + '\tCtrl+P', 'Przejdź do poprzedniego wiersza']                
+                'NextLine': ['Następny wiersz' + '\tCtrl+B', 'Przejdź do następnego wiersza'],
+                'PrevLine': ['Poprzedni wiersz' + '\tCtrl+P', 'Przejdź do poprzedniego wiersza'],
+                'NextChar': ['Następny kształt' + '\tCtrl+Alt+N', 'Przejdź do następnego kształtu bez zatwierdzenia etykiety'],
+                'NextCharCommit': ['Zatwierdź etykietę' + '\tCtrl+N', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
+                'NextCharToLabel': ['Następny niezaetykietowany kształt' + '\tCtrl+Alt+E',
+                                    'Przejdź do następnego niezaetykietowanego kształtu bez zatwierdzania etykiety'],
+                'NextCharToLabelCommit': ['Zatwierdź etykietę 2' + '\tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego']
                 }
         self._menu_strings = { 'Data' : '&Dane',
-                              'View' : _('&View'),
+                              #'View' : _('&View'),
+                              'View' : 'Widok',
                               'hOCR' : '&hOCR',
                               '' : ''
                             }
@@ -60,13 +67,15 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._append_menu(self.menubar, menu, 'Data')
         self._enable_menu_item('Data', 'LoadHOCR', False)
     
-    
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'NextLine', binding = self.OnNextLine)
         self._add_menu_item_by_key(menu, 'PrevLine', binding = self.OnPrevLine)
+        self._add_menu_item_by_key(menu, 'NextChar', binding = self.OnNextChar)
+        self._add_menu_item_by_key(menu, 'NextCharCommit', binding = self.OnNextCharCommit)
+        self._add_menu_item_by_key(menu, 'NextCharToLabel', binding = self.OnNextCharToLabel)
+        self._add_menu_item_by_key(menu, 'NextCharToLabelCommit', binding = self.OnNextCharToLabelCommit)
         
         self._append_menu(self.menubar, menu, 'hOCR')
-        
         
         self._append_menu(self.menubar, self._create_view_menu(), 'View')
 
@@ -81,17 +90,11 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         panel = self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
         self.page_widget = self.context_panel.page_widget
         self.page_widget.render_mode = djvu.decode.RENDER_FOREGROUND
+        mainSizer.Add(panel, 4, wx.EXPAND | wx.ALL, 1)
         
-        mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
-        panel = self.labelling_panel = LabellingPanel(parent = self,  data = self.data, data_hocr = self.data_hocr)
-        
-        mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
-        
-        panel = self.shapes_panel = wx.Panel(self)
-        panel.SetBackgroundColour('#0000ff')
-        
-        mainSizer.Add(panel, 1, wx.EXPAND | wx.ALL, 1)
-        
+        panel = self.labelling_panel = LabellingPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
+        mainSizer.Add(panel, 5, wx.EXPAND | wx.ALL, 1)        
+
         self.SetSizer(mainSizer)
 
         #TODO: global binding of keystrokes
@@ -122,18 +125,32 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.data_hocr.text_model.prev_line()
         self.labelling_panel.regenerate()
         
+    def OnNextChar(self, event):
+        self.data_hocr.next_shape()
+        self.labelling_panel.regenerate()
+        
+    def OnNextCharCommit(self, event):
+        self.labelling_panel.save_label()
+        self.OnNextChar(event)
+        
+    def OnNextCharToLabel(self, event):
+        pass
+        
+    def OnNextCharToLabelCommit(self, event):
+        self.labelling_panel.save_label()
+        self.OnNextCharToLabel(event)
+        
     def load_hocr_data(self):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")
         doc_name = self.data.current_document.name
         if path is not None:
             listing = os.listdir(path)
             for filename in listing:
-                page_data = page_of_hocr_data(filename, doc_name)
+                page_data = page_of_hocr_data(path, filename, doc_name)
                 if page_data is not None:
                     page_no, hocr_page = page_data
                     self.data_hocr.add_page(page_no, hocr_page)
-            self.open_djvu_file(doc_name)
-
+            self.open_djvu_file(path + os.sep + doc_name)
             
     def open_djvu_file(self, filename):
         try:

@@ -4,33 +4,59 @@
 
 class ShapeData:
     
-    def __init__(self, labelling = True):
+    def __init__(self, labelling = False):
         self.labelling = labelling
-        self.db_manipulator = None
+        self._db_manipulator = None
         self.documents = []
         self.current_document = None
         self.hocr_pages = {}
         self.shape_dictionaries = []
         self.pages = {}
+        self.shapes = {}
+        self.current_shape = None
+        
+        #browser data
         self.current_dictionary = None
         self.shape_hierarchies = []
         self.hierarchy_sorting_method = None
         self.current_shape_hierarchy = None
-        self.shapes = []
-        self.shape_translation = {}
-        self.current_shape = None
         
+        #labeller data
+        self.blits = {}
+        self.fonts = {} #ID : string
+        self.font_sizes = {} #ID : string
+        self.users = {} #ID : string
+        self.labels = {} #ID : Label
+        
+    def _get_db_manipulator(self):
+        return self._db_manipulator
+    def _set_db_manipulator(self, value):
+        self._db_manipulator = value
+        if self.labelling:
+            self.prepare_labelling_data()
+    db_manipulator = property(_get_db_manipulator, _set_db_manipulator)    
+    
+    def prepare_labelling_data(self):
+        self.fonts = self.db_manipulator.fetch_simple("fonts")
+        self.font_sizes = self.db_manipulator.fetch_simple("font_sizes")
+        self.users = self.db_manipulator.fetch_simple("users")
+   
+    def clear_shapes(self):
+        self.shapes = {}
+    
+    def add_shapes(self, shapes):    
+        for shape in shapes:
+            self.shapes[shape.db_id] = shape   
+
     def fill_shape_dictionary(self, shapes):
-        self.shapes = shapes
-        for i in range(len(self.shapes)):
-            shape = self.shapes[i]
-            self.shape_translation[shape.db_id] = shape   
+        self.shapes = {}
+        self.add_shapes(shapes)
         self.compute_hierarchies()
         
     def compute_hierarchies(self):
         self.shape_hierarchies = []
         self.current_shape_hierarchy = None
-        for shape in self.shapes:
+        for shape in self.shapes.values():
             if shape.has_no_parent():
                 self.shape_hierarchies.append(shape)
             else:
@@ -75,3 +101,13 @@ class ShapeData:
             self.shape_hierarchies.append(shape)
             self.db_manipulator.shape_edit(shape_id = shape.db_id, prev_parent_id = parent_db_id, new_parent_id = -1)
 
+    def add_blits(self, blits, page_no):
+        for blit in blits:
+            shape = self.shapes[blit.shape_id]
+            blit.w = shape.bounding_box.right
+            blit.h = shape.bounding_box.top
+            blit.shape = shape
+        self.blits[page_no] = blits
+        
+    def load_labels(self):
+        pass
