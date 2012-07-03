@@ -6,6 +6,8 @@ from ocrodjvu import hocr
 from ocrodjvu.errors import MalformedHocr
 import sys
 from os import sep
+import unicodedata
+
 
 def page_of_hocr_data(path, filename, document_name):
     
@@ -21,6 +23,11 @@ def page_of_hocr_data(path, filename, document_name):
                 return (page_no, None)
     return None
 
+def unicode_code(character):
+    return ord(character)
+
+def unicode_name(character):
+    return unicodedata.name(character)
     
 class Rect:
     #a rectangle on the map. used to characterize a room.

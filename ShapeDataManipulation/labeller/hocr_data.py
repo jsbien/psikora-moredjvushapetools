@@ -30,11 +30,16 @@ class DatahOCR:
     def make_text_model(self, callbacks = []):
         self.text_model = TextModel(self.document, self, callbacks) 
         self._find_shapes_for_nodes()
+        self.data.load_labels()
+        self.data.compute_hierarchies()
+        self.text_model.current_char = 0
+        
     
     def _find_shapes_for_nodes(self):
         for page_no in self.hocr_pages.keys():
             if self.hocr_pages[page_no] is not None:
                 self._find_shapes_for_nodes_by_page(page_no)
+        
                 
     def _find_shapes_for_nodes_by_page(self, page_no):
         translated_page_no = self._page_no_translation(page_no)
@@ -190,7 +195,8 @@ class TextModel(djvusmooth.models.text.Text):
         else:
             self._current_char = value
         self[self.current_page].current_char = self._current_char
-        self.data.current_shape = self[self.current_page].current_char_node.shapes[0] #TODO: needs to handle multiple shapes
+        self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
+        self.data.current_hierarchy = self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
     current_char = property(_get_current_char, _set_current_char)
     
     def _get_current_line(self):

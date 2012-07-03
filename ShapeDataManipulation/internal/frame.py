@@ -53,6 +53,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         self.db_manipulator = DatabaseManipulator(db_name, db_host, db_user, db_pass)
         self.data.db_manipulator = self.db_manipulator
         self.data.documents = self.db_manipulator.fetch_documents()
+        self.data.unicode_chars, self.data.uchars_by_id = self.db_manipulator.fetch_character_data()
         
     def choose_document(self):
         previous_document = self.data.current_document

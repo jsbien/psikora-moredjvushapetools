@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 '''
 @author: Piotr Sikora
 '''
 
+from internal.datatypes import Label, UnicodeChar
+
 class ShapeData:
     
-    def __init__(self, labelling = False):
-        self.labelling = labelling
+    def __init__(self):#, labelling = False
+        #self.labelling = labelling
         self._db_manipulator = None
         self.documents = []
         self.current_document = None
@@ -22,24 +25,78 @@ class ShapeData:
         self.current_shape_hierarchy = None
         
         #labeller data
+        self.textel_types = ['tekstel właściwy', 'mikrotekstel', 'makrotekstel' ]
         self.blits = {}
-        self.fonts = {} #ID : string
-        self.font_sizes = {} #ID : string
-        self.users = {} #ID : string
         self.labels = {} #ID : Label
+        self.unicode_chars = {} # char: UnicodeChar
+        self.uchars_by_id = {}
+        self.clear()
         
+    def clear(self):
+        self._fonts = None #ID : string
+        self._font_sizes = None #ID : string
+        self._font_types = None
+        self._users = None #ID : string
+        self._font_ids = {} #string : ID
+        self._font_size_ids = {} #string : ID
+        self._font_type_ids = {} #string : ID
+        self._user_ids = {} #string : ID
+        
+    def _get_fonts(self):
+        if self._fonts is None:
+            self._fonts = self.db_manipulator.fetch_simple("fonts")
+        return self._fonts
+    fonts = property(_get_fonts)
+    
+    def _get_font_sizes(self):
+        if self._font_sizes is None:
+            self._font_sizes = self.db_manipulator.fetch_simple("font_sizes")
+        return self._font_sizes
+    font_sizes = property(_get_font_sizes)
+
+    def _get_font_types(self):
+        if self._font_types is None:
+            self._font_types = self.db_manipulator.fetch_simple("font_types")
+        return self._font_types
+    font_types = property(_get_font_types)
+    
+    def _get_users(self):
+        if self._users is None:
+            self._users = self.db_manipulator.fetch_simple("labeller_users")
+        return self._users
+    users = property(_get_users)
+    
+    def user_id(self, username):
+        if username in self._user_ids.keys():
+            return self._user_ids[username]
+        else:
+            if username in self.users.values():
+                for key in self.users.keys():
+                    if self.users[key] == username:
+                        self._user_ids[username] = key
+                        return key 
+            else:
+                if username == self.db_manipulator.db_user:
+                    return self.db_manipulator.insert_simple("labeller_users", "username", username)
+                else:
+                    raise ValueError
+        
+    def uchar_id(self, uchar, ucharname):
+        if uchar in self.unicode_chars:
+            return self.unicode_chars[uchar].db_id
+        else:
+            uchar_id =  self.db_manipulator.insert_uchar(uchar, ucharname)
+            uchar_obj = UnicodeChar(uchar_id, uchar, ucharname)
+            self.unicode_chars[uchar] = uchar_obj
+            self.uchars_by_id[uchar_id] = uchar_obj
+            return uchar_id
+       
     def _get_db_manipulator(self):
         return self._db_manipulator
     def _set_db_manipulator(self, value):
-        self._db_manipulator = value
-        if self.labelling:
-            self.prepare_labelling_data()
+        #self._db_manipulator = value
+        pass
     db_manipulator = property(_get_db_manipulator, _set_db_manipulator)    
-    
-    def prepare_labelling_data(self):
-        self.fonts = self.db_manipulator.fetch_simple("fonts")
-        self.font_sizes = self.db_manipulator.fetch_simple("font_sizes")
-        self.users = self.db_manipulator.fetch_simple("users")
    
     def clear_shapes(self):
         self.shapes = {}
@@ -60,10 +117,19 @@ class ShapeData:
             if shape.has_no_parent():
                 self.shape_hierarchies.append(shape)
             else:
-                shape.parent = self.shape_translation[shape.parent_db_id]
+                shape.parent = self.shapes[shape.parent_db_id]
                 shape.parent.children.append(shape)
         self.hierarchy_sorting_method = None
         
+    def select_hierarchy_for_current_shape(self):
+        self.current_shape_hierarchy = self._hierarchy_for_shape(self.current_shape) 
+   
+    def _hierarchy_for_shape(self, shape):
+        if shape.parent is None:
+            return shape
+        else:
+            return self._hierarchy_for_shape(shape.parent)
+    
     def sorted_hierarchies(self, sorting_method):
         if self.hierarchy_sorting_method != sorting_method:
             self.hierarchy_sorting_method = sorting_method
@@ -110,4 +176,27 @@ class ShapeData:
         self.blits[page_no] = blits
         
     def load_labels(self):
-        pass
+        labels_to_uchars = self.db_manipulator.fetch_junction_table("label_chars")
+        
+        raw_label_data = self.db_manipulator.fetch_labels_raw_data(self.current_document.db_id)
+        labels = {}
+        for db_id, font_id, font_size_id, font_type_id, textel_type, _, _, _ in raw_label_data: #user and date ignored
+            font = self.fonts[font_id]
+            font_type = self.font_types[font_type_id]
+            font_size = self.font_sizes[font_size_id]
+            uchar_id = labels_to_uchars[db_id][0]
+            unicode_character = self.uchars_by_id[uchar_id]
+            label = Label(font_id = font_id, font = font,
+                      font_type_id = font_type_id, font_type = font_type,
+                      font_size_id = font_size_id, font_size = font_size,              
+                      textel_id = uchar_id, textel = unicode_character, 
+                      textel_type = textel_type
+                      )
+            label.db_id = db_id
+            labels[db_id] = label
+        labels_to_shapes = self.db_manipulator.fetch_junction_table("labelled_shapes")
+        
+        for label in labels.values():
+            shape_ids = labels_to_shapes.get(label.db_id, [])
+            for shape_id in shape_ids:
+                self.shapes[shape_id].label = label 

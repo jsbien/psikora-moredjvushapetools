@@ -514,34 +514,34 @@ Also see [[AdvancedOptions]]</pre>
 <pre>* pakiet dla ubuntu
 </pre>
 </div>
-<div title="Eksport kształtów" creator="zasvid" modifier="zasvid" created="201203280939" modified="201206091600" changecount="4">
+<div title="Eksport kształtów" creator="zasvid" modifier="zasvid" created="201203280939" modified="201207021000" changecount="5">
 <pre>* uwolnienie eksportera od forka djvulibre
 * przyłączenie kodu do djview4poliqarp
 * przyspieszenie działania
 * dodać informacje o ewentualnym nakładaniu się kształtów
 * kształt spójny/niespójny
-* zapisywać max bounding box dla drzewa
+--* zapisywać max bounding box dla drzewa-- //przeniesione do przeglądarki kształtów i zrobione//
 
 </pre>
 </div>
-<div title="Etykieciarka" creator="zasvid" modifier="zasvid" created="201203280954" modified="201206091734" changecount="10">
-<pre>Rozdział na przeglądarkę i etykieciarkę hOCR
+<div title="Etykieciarka" creator="zasvid" modifier="zasvid" created="201203280954" modified="201207021003" changecount="11">
+<pre>--Rozdział na przeglądarkę i etykieciarkę hOCR--
 
 [[Specyfikacja i pytania do niej]]
 
 Tekstel będący etykietą to nazwa unicodowa w postaci kanonicznej dla znaku bazowego + combining, który stanowi klasę abstrackji dla etykietowanych znaków.
 
 !Wersja hOCR
-Dane do testowania uzyskiwane skryptem Wilka.
+--Dane do testowania uzyskiwane skryptem Wilka.-- //done//
 Kontekst wizualny: 
-*tekstowy dla strony, pochodzący z hocr
+--*tekstowy dla strony, pochodzący z hocr-- //zmiana na graficzny, gotowe//
 *graficzny, wierny, dla wiersza, który jest etykietowany - z podświetleniem poszczególnych znaków
-Etykietowanie całego wiersza
-Wyświetlanie informacji ukrytych z hocr
+--Etykietowanie całego wiersza-- //niezupełnie, bo nadal znak po znaku, ale w ogólności owszem//
+Wyświetlanie informacji ukrytych z hocr 
 Etykiety, poza bazą danych, zapisywane są także do hOCR
 !Funkcjonalności
 *nadawanie etykiet - nazw znaków unicode + dodatkowych wczytywanych z plików (wykorzystać &quot;unihistext&quot;)
-*rozcinanie drzew kształtów
+--*rozcinanie drzew kształtów--
 *opisywanie sklejonych znaków
 *opisywanie &quot;rozkawałkowanych&quot; znaków
 *etykieciarka etykietuje kształty z bounding boxów hOCR
@@ -556,7 +556,7 @@ przeskakujemy dalej (do następnego znaku wg hOCR)
 * przeglądarka korzeni hierarchii - korzenie wraz z informacjami nt. hierarchii (ile kształtów, wielkość). Porządkowalna i filtrowalna wg wielkości hierarchii
 
 !Rozszerzenie bazy danych
-Etykieciarka powinna mieć swój własny zestaw tabel w bazie danych, osobny od eksportera, ale korzystający z danych przezeń tam umieszczonych (żeby nie updejtować eksportera gdy zmieni się struktura danych etykieciarki).
+--Etykieciarka powinna mieć swój własny zestaw tabel w bazie danych, osobny od eksportera, ale korzystający z danych przezeń tam umieszczonych (żeby nie updejtować eksportera gdy zmieni się struktura danych etykieciarki).--//Done
 !!Struktura rozszerzenia bazy danych
 !!!Tabela Etykiet
 *id etykiety
@@ -641,7 +641,7 @@ config.options.chkAutoSave = true;  </pre>
 <div title="SiteTitle" creator="zasvid" modifier="PiotrSikora" created="201203280908" modified="201203281657" changecount="3">
 <pre>Notatki nt. pracy z ~DjVu</pre>
 </div>
-<div title="Specyfikacja i pytania do niej" creator="zasvid" modifier="zasvid" created="201204011620" modified="201204041701" changecount="8">
+<div title="Specyfikacja i pytania do niej" creator="zasvid" modifier="zasvid" created="201204011620" modified="201207021120" changecount="10">
 <pre>{{{
 1. Wstęp
 Przewidujemy dwa sposoby etykietowania kształtów:

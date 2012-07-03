@@ -39,15 +39,16 @@ class LabellingPanel(wx.Panel):
         
     def regenerate(self):
         self.line_edit.ChangeValue(self.data_hocr.get_line_text())
-        sel_from, sel_to = self.data_hocr.text_model.get_current_char_position() 
-        self.line_edit.SetSelection(sel_from, sel_to)
         self.line_edit.SetFocus()
-        self.label.regenerate()
-        #self.shapes.regenerate()
+        self.label.regenerate(self.get_selected_character())
+        self.shapes.regenerate()
+        self.Refresh()
+        self.Update()
     
     def get_selected_character(self):
+        sel_from, sel_to = self.data_hocr.text_model.get_current_char_position() 
+        self.line_edit.SetSelection(sel_from, sel_to)
         return self.line_edit.GetStringSelection()   
     
     def save_label(self):
-        unicode_character = self.get_selected_character()
-        self.label.save_label(unicode_character)
+        self.label.save_label(self.get_selected_character())

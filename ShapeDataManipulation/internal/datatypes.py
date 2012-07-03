@@ -151,11 +151,24 @@ class Shape:
             return childwidth
         else:
             return 1
-        
+
+    def _get_hierarchy(self):
+        hierarchy_root = self
+        return hierarchy_root
+    hierarchy = property(_get_hierarchy)
+
 class Label:
     
-    def __init__(self, db_id, unicode_chars, ):
-        pass
+    def __init__(self, font_id, font, font_type_id, font_type, font_size_id, font_size, textel_type, textel_id = None, textel = None):
+        self.font_id = font_id 
+        self.font = font
+        self.font_type_id = font_type_id
+        self.font_type = font_type
+        self.font_size_id = font_size_id
+        self.font_size = font_size              
+        self.textel_id = textel_id
+        self.textel = textel
+        self.textel_type = textel_type
     
 class UnicodeChar:
     
