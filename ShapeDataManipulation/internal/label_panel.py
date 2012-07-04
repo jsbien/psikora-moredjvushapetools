@@ -198,7 +198,7 @@ class LabelPanel(wx.Panel):
             self.data.db_manipulator.insert_into_junction(table = "label_chars", fields = ("uchar_id","label_id"), values = (uchar_id, label.db_id))
         
             #label the hierarchy of shapes
-            for shape in self.data.current_shape_hierarchy.linearise_hierarchy():
+            for shape in self.data.current_hierarchy.linearise_hierarchy():
                 self.data.db_manipulator.insert_into_junction(table = "labelled_shapes", fields = ("shape_id", "label_id"), values = (shape.db_id, label.db_id))
 
                     

@@ -22,7 +22,7 @@ class ShapeData:
         self.current_dictionary = None
         self.shape_hierarchies = []
         self.hierarchy_sorting_method = None
-        self.current_shape_hierarchy = None
+        self.current_hierarchy = None
         
         #labeller data
         self.textel_types = ['tekstel właściwy', 'mikrotekstel', 'makrotekstel' ]
@@ -114,7 +114,7 @@ class ShapeData:
         
     def compute_hierarchies(self):
         self.shape_hierarchies = []
-        self.current_shape_hierarchy = None
+        self.current_hierarchy = None
         for shape in self.shapes.values():
             if shape.has_no_parent():
                 self.shape_hierarchies.append(shape)
@@ -124,7 +124,7 @@ class ShapeData:
         self.hierarchy_sorting_method = None
         
     def select_hierarchy_for_current_shape(self):
-        self.current_shape_hierarchy = self._hierarchy_for_shape(self.current_shape) 
+        self.current_hierarchy = self._hierarchy_for_shape(self.current_shape) 
    
     def _hierarchy_for_shape(self, shape):
         if shape.parent is None:
@@ -157,7 +157,10 @@ class ShapeData:
                 parent.children.append(child)
             else:
                 self.shape_hierarchies.append(child)
-            self.db_manipulator.shape_edit(shape_id = child.db_id, prev_parent_id = shape.db_id, new_parent_id = parent_id)
+            self.db_manipulator.shape_edit(shape_id = child.db_id,
+                                           prev_parent_id = shape.db_id,
+                                           new_parent_id = parent_id,
+                                           user_id = self.user_id(self.db_manipulator.db_user))
         shape.children = []
     
     def cut_off(self, shape):
@@ -167,7 +170,7 @@ class ShapeData:
             shape.parent = None
             shape.parent_db_id = -1
             self.shape_hierarchies.append(shape)
-            self.db_manipulator.shape_edit(shape_id = shape.db_id, prev_parent_id = parent_db_id, new_parent_id = -1)
+            self.db_manipulator.shape_edit(shape_id = shape.db_id, prev_parent_id = parent_db_id, new_parent_id = -1, user_id = self.user_id(self.db_manipulator.db_user))
 
     def add_blits(self, blits, page_no):
         for blit in blits:

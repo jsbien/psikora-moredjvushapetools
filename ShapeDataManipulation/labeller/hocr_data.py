@@ -209,7 +209,7 @@ class TextModel(djvusmooth.models.text.Text):
             self.at_limit = False
         self[self.current_page].current_char = self._current_char
         self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
-        self.data.current_hierarchy = self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
+        self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
     current_char = property(_get_current_char, _set_current_char)
     
     def _get_current_line(self):

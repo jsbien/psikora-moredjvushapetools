@@ -121,11 +121,11 @@ class DatabaseManipulator:
         self.cursor.execute("INSERT INTO `unicode_chars`(`uchar`, `char_name`) VALUES(%s, %s)", (character, character_name))
         return self.cursor.lastrowid
 
-    def shape_edit(self, shape_id, prev_parent_id, new_parent_id):
+    def shape_edit(self, shape_id, prev_parent_id, new_parent_id, user_id):
         query = "UPDATE shapes SET parent_id = " + str(new_parent_id) + " WHERE id = " + str(shape_id)
         self.cursor.execute(query)
         query = "INSERT INTO shape_edits(user, shape_id, prev_parent, new_parent, date) VALUES('" \
-                + str(self.db_user)+"', " + str(shape_id) + ", " + str(prev_parent_id) + ", " + str(new_parent_id) + ", now())"
+                + str(self.user_id)+"', " + str(shape_id) + ", " + str(prev_parent_id) + ", " + str(new_parent_id) + ", now())"
         self.cursor.execute(query)
     
     def reset_database_for_labelling(self):
