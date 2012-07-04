@@ -65,8 +65,15 @@ class DatahOCR:
                 if node_rect.intersect(blit_rect):
                     node.shapes.append(blit_rect.shape)
             
-    def next_shape(self):
-        self.text_model.next_char()
+    def next_shape(self, previous = False, find_unlabeled = False):
+        if previous:
+            direction = -1
+        else:
+            direction = 1
+        while True:
+            self.text_model.current_char += direction 
+            if not find_unlabeled or self.data.current_shape.label is None or self.text_model.at_limit:
+                break
        
     def get_line_text(self):
         return self.text_model.get_line_text()
@@ -121,7 +128,7 @@ class TextModel(djvusmooth.models.text.Text):
         self._total_chars = 0
         self._callbacks = callbacks
         djvusmooth.models.text.Text.__init__(self)
-        
+        self.at_limit = True
 
     def reset_document(self, document, pages_data):
         self._document = document
@@ -139,6 +146,8 @@ class TextModel(djvusmooth.models.text.Text):
         if greater_pages:
             self.current_page = min(greater_pages)
             self.current_line = 0
+        else:
+            self.at_limit = True
     
     def prev_page(self):
         lesser_pages = [
@@ -149,21 +158,24 @@ class TextModel(djvusmooth.models.text.Text):
         if lesser_pages:
             self.current_page = max(lesser_pages)
             self.current_line = len(self[self.current_page].lines) - 1
+        else:
+            self.at_limit = True
     
     def next_line(self, character_shift = 0):
+        current_line = self.current_line
         self.current_line += 1
-        self.current_char = character_shift
+        if self.current_line != current_line:
+            self.current_char = character_shift
         
     def _current_line_len(self):
         return len(list(self[self.current_page].current_line_node.get_leafs()))    
     current_line_len = property(_current_line_len)
     
     def prev_line(self, character_shift = 0):
+        current_line = self.current_line
         self.current_line -= 1
-        self.current_char = self.current_line_len + character_shift 
-    
-    def next_char(self, only_unlabeled = False):
-        self.current_char += 1
+        if self.current_line != current_line:
+            self.current_char = self.current_line_len + character_shift 
     
     def get_line_text(self):
         return ''.join([
@@ -194,6 +206,7 @@ class TextModel(djvusmooth.models.text.Text):
             self.next_line(value - total_line_chars)
         else:
             self._current_char = value
+            self.at_limit = False
         self[self.current_page].current_char = self._current_char
         self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
         self.data.current_hierarchy = self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes

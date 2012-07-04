@@ -112,7 +112,7 @@ class DatabaseManipulator:
     def insert_into_junction(self, table, fields, values):
         self.cursor.execute("INSERT INTO `" + table + "`(`" + fields[0] + "`, `" + fields[1] + "`) VALUES(%s, %s)", values)
     
-    def insert_label(self, label, document_id, user_id):
+    def insert_label(self, label, user_id, document_id):
         values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id)
         self.cursor.execute("INSERT INTO `labels`(`font`, `font_size`, `font_type`, `textel_type`, `document_id`, `user`, `date`) VALUES(%s, %s, %s, %s, %s, %s, now())", values)
         return self.cursor.lastrowid

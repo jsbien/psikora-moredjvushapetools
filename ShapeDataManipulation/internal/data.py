@@ -77,7 +77,9 @@ class ShapeData:
                         return key 
             else:
                 if username == self.db_manipulator.db_user:
-                    return self.db_manipulator.insert_simple("labeller_users", "username", username)
+                    user_id = self.db_manipulator.insert_simple("labeller_users", "username", username)
+                    self.users[user_id] = username
+                    return user_id
                 else:
                     raise ValueError
         

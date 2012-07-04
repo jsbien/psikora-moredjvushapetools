@@ -42,11 +42,13 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._menuitem_strings = { 'ChooseDocument': ['Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy'],
                 'LoadHOCR': ['Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR'],
                 'Quit': ['&Wyjście', 'Wyjdź z programu'],
-                'NextLine': ['Następny wiersz' + '\tCtrl+B', 'Przejdź do następnego wiersza'],
-                'PrevLine': ['Poprzedni wiersz' + '\tCtrl+P', 'Przejdź do poprzedniego wiersza'],
-                'NextChar': ['Następny kształt' + '\tCtrl+Alt+N', 'Przejdź do następnego kształtu bez zatwierdzenia etykiety'],
+                'NextLine': ['Następny wiersz' + '\tCtrl+Alt+N', 'Przejdź do następnego wiersza'],
+                'PrevLine': ['Poprzedni wiersz' + '\tCtrl+Alt+P', 'Przejdź do poprzedniego wiersza'],
+                'NextChar': ['Następny kształt' + '\tCtrl+Shift+N', 'Przejdź do następnego kształtu bez zatwierdzenia etykiety'],
+                'PrevChar': ['Poprzedni kształt' + '\tCtrl+P', 'Przejdź do poprzedniego kształtu bez zatwierdzenia etykiety'],
+                'PrevCharToLabel': ['Poprzedni niezaetykietowany kształt' + '\tCtrl+W', 'Przejdź do poprzedniego niezaetykietowanego kształtu bez zatwierdzenia etykiety'],
                 'NextCharCommit': ['Zatwierdź etykietę' + '\tCtrl+N', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
-                'NextCharToLabel': ['Następny niezaetykietowany kształt' + '\tCtrl+Alt+E',
+                'NextCharToLabel': ['Następny niezaetykietowany kształt' + '\tCtrl+Shift+E',
                                     'Przejdź do następnego niezaetykietowanego kształtu bez zatwierdzania etykiety'],
                 'NextCharToLabelCommit': ['Zatwierdź etykietę 2' + '\tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego']
                 }
@@ -74,6 +76,10 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._add_menu_item_by_key(menu, 'NextCharCommit', binding = self.OnNextCharCommit)
         self._add_menu_item_by_key(menu, 'NextCharToLabel', binding = self.OnNextCharToLabel)
         self._add_menu_item_by_key(menu, 'NextCharToLabelCommit', binding = self.OnNextCharToLabelCommit)
+        self._add_menu_item_by_key(menu, 'PrevChar', binding = self.OnPrevChar)
+      #  self._add_menu_item_by_key(menu, 'PrevCharCommit', binding = self.OnNextCharCommit)
+        self._add_menu_item_by_key(menu, 'PrevCharToLabel', binding = self.OnPrevCharToLabel)
+        #self._add_menu_item_by_key(menu, 'NextCharToLabelCommit', binding = self.OnNextCharToLabelCommit)
         
         self._append_menu(self.menubar, menu, 'hOCR')
         
@@ -124,6 +130,22 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def OnPrevLine(self, event):
         self.data_hocr.text_model.prev_line()
         self.labelling_panel.regenerate()
+ 
+    def OnPrevChar(self, event):
+        self.data_hocr.next_shape(previous = True)
+        self.labelling_panel.regenerate()
+        
+    def OnPrevCharCommit(self, event):
+        self.labelling_panel.save_label()
+        self.OnPrevChar(event)
+        
+    def OnPrevCharToLabel(self, event):
+        self.data_hocr.next_shape(previous = True, find_unlabeled = True)
+        self.labelling_panel.regenerate()
+        
+    def OnPrevCharToLabelCommit(self, event):
+        self.labelling_panel.save_label()
+        self.OnPrevCharToLabel(event)
         
     def OnNextChar(self, event):
         self.data_hocr.next_shape()
@@ -134,7 +156,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.OnNextChar(event)
         
     def OnNextCharToLabel(self, event):
-        pass
+        self.data_hocr.next_shape(find_unlabeled = True)
+        self.labelling_panel.regenerate()
         
     def OnNextCharToLabelCommit(self, event):
         self.labelling_panel.save_label()
