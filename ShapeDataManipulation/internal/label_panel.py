@@ -53,38 +53,24 @@ class LabelPanel(wx.Panel):
         self._dirty = False
         self._last_values = None
         
-    def label_layout(self, sizer, label, value):
-        linesizer = wx.BoxSizer(wx.HORIZONTAL)
-        infolabel = wx.StaticText(self.inner_panel, wx.ID_ANY, label)
-        valuelabel = wx.StaticText(self.inner_panel, wx.ID_ANY, value)
-        linesizer.Add(infolabel, 0, wx.ALL, 5)
-        linesizer.AddStretchSpacer()
-        linesizer.Add(valuelabel, 0, wx.ALL, 5)
-        sizer.Add(linesizer, 0, wx.ALL | wx.EXPAND, 5)
-    
-    def combo_layout(self, sizer, label_key, values, readonly = False):
+    def layout_item(self, sizer, label_key, item):
         linesizer = wx.BoxSizer(wx.HORIZONTAL)
         infolabel = wx.StaticText(self.inner_panel, wx.ID_ANY, _s(label_key))
+        linesizer.Add(infolabel, 0, wx.LEFT, 5)
+        linesizer.AddStretchSpacer()
+        linesizer.Add(item, 0, wx.RIGHT, 5)
+        sizer.Add(linesizer, 0, wx.ALL | wx.EXPAND, 3)
+        return item
+        
+    def label(self, value):
+        return wx.StaticText(self.inner_panel, wx.ID_ANY, value)
+    
+    def combo(self, values, readonly = False):
         cb_style = wx.CB_DROPDOWN | wx.CB_SORT
         if readonly:
             cb_style = cb_style | wx.CB_READONLY
-        valuebox = wx.ComboBox(self.inner_panel, choices = values, style = cb_style)
-        linesizer.Add(infolabel, 0, wx.ALL, 5)
-        linesizer.AddStretchSpacer()
-        linesizer.Add(valuebox, 0, wx.ALL, 5)
-        sizer.Add(linesizer, 0, wx.ALL | wx.EXPAND, 5)
-        self._comboboxes[label_key] = valuebox
+        return wx.ComboBox(self.inner_panel, choices = values, style = cb_style)
 
-    def text_control_layout(self, sizer, label, initial_value):
-        linesizer = wx.BoxSizer(wx.HORIZONTAL)
-        infolabel = wx.StaticText(self.inner_panel, wx.ID_ANY, label)
-        valuechanger = wx.TextCtrl(self.inner_panel)
-        #valuelabel = wx.StaticText(self.inner_panel, wx.ID_ANY, value)
-        linesizer.Add(infolabel, 0, wx.ALL, 5)
-        linesizer.AddStretchSpacer()
-        linesizer.Add(valuechanger, 0, wx.ALL, 5)
-        sizer.Add(linesizer, 0, wx.ALL | wx.EXPAND, 5)
-        
     def regenerate(self, unicode_char = None):
         
         self._comboboxes = {}
@@ -101,17 +87,17 @@ class LabelPanel(wx.Panel):
             imagepanel.SetSizer(imagesizer)
             sizer.Add(imagepanel, 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             
-            self.label_layout(sizer, _s('db_id'), str(shape.id))
-            self.label_layout(sizer, _s('size'), str(shape.width) + " x " + str(shape.height))
+            self.layout_item(sizer, 'db_id', self.label(str(shape.id)))
+            self.layout_item(sizer, 'size', self.label(str(shape.width) + " x " + str(shape.height)))
             sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             if self.labelling:
-                self.label_layout(sizer, _s('textel'), unicode_char)
-                self.label_layout(sizer, _s('textel_code'), str(unicode_code(unicode_char)))
-                self.label_layout(sizer, _s('textel_name'), unicode_name(unicode_char))
-                self.combo_layout(sizer, 'textel_type', self.data.textel_types, readonly = True)
-                self.combo_layout(sizer, 'font_type', self.data.font_types.values())
-                self.combo_layout(sizer, 'font', self.data.fonts.values())
-                self.combo_layout(sizer, 'font_size', self.data.font_sizes.values())
+                self.layout_item(sizer, 'textel', self.label(unicode_char))
+                self.layout_item(sizer, 'textel_code', self.label(str(unicode_code(unicode_char))))
+                self.layout_item(sizer, 'textel_name', self.label(unicode_name(unicode_char)))
+                self._comboboxes['textel_type'] = self.layout_item(sizer, 'textel_type', self.combo(self.data.textel_types, readonly = True))
+                self._comboboxes['font_type'] = self.layout_item(sizer, 'font_type', self.combo(self.data.font_types.values()))
+                self._comboboxes['font'] = self.layout_item(sizer, 'font', self.combo(self.data.fonts.values()))
+                self._comboboxes['font_size'] = self.layout_item(sizer, 'font_size', self.combo(self.data.font_sizes.values()))
                 if shape.label is None:
                     self._dirty = True
                     if self._last_values is None:
@@ -136,21 +122,21 @@ class LabelPanel(wx.Panel):
                     self._comboboxes['font_type'].SetStringSelection(shape.label.font_type)
             else:
                 if shape.label is None:
-                    self.label_layout(sizer, _s('no_label'), "")
+                    self.layout_item(sizer, 'no_label', self.label(""))
                 else:
-                    self.label_layout(sizer, _s('textel'), str(shape.label.textel))
-                    self.label_layout(sizer, _s('textel_type'), str(shape.label.textel_type))
-                    self.label_layout(sizer, _s('font_type'), str(shape.label.font_types))
-                    self.label_layout(sizer, _s('font'), str(shape.label.fonts))
-                    self.label_layout(sizer, _s('font_size'), str(shape.label.font_sizes))
+                    self.layout_item(sizer, 'textel', self.label(str(shape.label.textel)))
+                    self.layout_item(sizer, 'textel_type', self.label(str(shape.label.textel_type)))
+                    self.layout_item(sizer, 'font_type', self.label(str(shape.label.font_types)))
+                    self.layout_item(sizer, 'font', self.label(str(shape.label.fonts)))
+                    self.layout_item(sizer, 'font_size', self.label(str(shape.label.font_sizes)))
             sizer.AddStretchSpacer()
             sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
-            self.label_layout(sizer, _s('doc_name'), str(self.data.current_document.name))
-            self.label_layout(sizer, _s('doc_address'), str(self.data.current_document.address))
+            self.layout_item(sizer, 'doc_name', self.label(str(self.data.current_document.name)))
+            self.layout_item(sizer, 'doc_address', self.label(str(self.data.current_document.address)))
             if not self.labelling:
-                self.label_layout(sizer, _s('dict_name'), str(self.data.current_dictionary.name))
-                self.label_layout(sizer, _s('hierarchy_count'), str(len(self.data.shape_hierarchies)))
-                self.label_layout(sizer, _s('dict_shape_count'), str(len(self.data.shapes)))
+                self.layout_item(sizer, 'dict_name', self.label(str(self.data.current_dictionary.name)))
+                self.layout_item(sizer, 'hierarchy_count', self.label(str(len(self.data.shape_hierarchies))))
+                self.layout_item(sizer, 'dict_shape_count', self.label(str(len(self.data.shapes))))
     
         self.inner_panel.SetSizer(sizer, True)
         self.inner_panel.Fit()

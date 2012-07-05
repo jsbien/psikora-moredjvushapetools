@@ -25,7 +25,7 @@ import djvu.const
 
 from internal.frame import DjVuShapeToolsFrame
 from labeller.utils import page_of_hocr_data
-
+import sys
 
 
 class hOCRLabeller(DjVuShapeToolsFrame):
@@ -171,9 +171,12 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             for filename in listing:
                 page_data = page_of_hocr_data(path, filename, doc_name)
                 if page_data is not None:
+                    print("Opened " + str(path + os.sep + filename))
                     page_no, hocr_page = page_data
                     self.data_hocr.add_page(page_no, hocr_page)
+            print(str("Trying to open: " + str(path + os.sep + doc_name)))
             self.open_djvu_file(path + os.sep + doc_name)
+            
             
     def open_djvu_file(self, filename):
         try:
@@ -182,7 +185,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
             self.labelling_panel.regenerate()
-        except djvu.decode.JobFailed:
+        except djvu.decode.JobFailed as exc:
+            print("Opening djvu file failed: "+ sys.exc_info()[0])
             self.data_hocr.text_model = None
             self.data_hocr.document = None
         
