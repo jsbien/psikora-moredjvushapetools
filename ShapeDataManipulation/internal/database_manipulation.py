@@ -125,7 +125,7 @@ class DatabaseManipulator:
         query = "UPDATE shapes SET parent_id = " + str(new_parent_id) + " WHERE id = " + str(shape_id)
         self.cursor.execute(query)
         query = "INSERT INTO shape_edits(user, shape_id, prev_parent, new_parent, date) VALUES('" \
-                + str(self.user_id)+"', " + str(shape_id) + ", " + str(prev_parent_id) + ", " + str(new_parent_id) + ", now())"
+                + str(user_id)+"', " + str(shape_id) + ", " + str(prev_parent_id) + ", " + str(new_parent_id) + ", now())"
         self.cursor.execute(query)
     
     def reset_database_for_labelling(self):
