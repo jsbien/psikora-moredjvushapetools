@@ -5,6 +5,16 @@ Code from: http://wiki.wxpython.org/WorkingWithImages
 import wx
 import Image             # PIL module. Only if you use the PIL library.
 
+import numpy
+
+def empty_image(width, height, colour = (255,255,255)):
+    array = numpy.zeros( (height, width, 3),'uint8')
+    array[:,:,] = (colour)
+    image = wx.EmptyImage(width, height)
+    image.SetData( array.tostring())
+    return image
+    
+
 def WxBitmapToPilImage( myBitmap ) :
     return WxImageToPilImage( WxBitmapToWxImage( myBitmap ) )
 

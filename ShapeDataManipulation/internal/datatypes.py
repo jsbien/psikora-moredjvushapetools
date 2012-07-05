@@ -62,7 +62,7 @@ class Shape:
         self.height = height
         self.size = (width, height)
         self.bounding_box = BoundingBox(bbox_top,bbox_left,bbox_right,bbox_bottom)
-        self.image = None
+        self._image = None
         self.label = None
         
         self.hierarchy_count = None
@@ -71,10 +71,12 @@ class Shape:
     def has_no_parent(self):
         return self.parent_db_id == -1
 
-    def get_image(self):
-        if self.image == None:
-            self.image = self._decode_image()
-        return self.image
+    def _get_image(self):
+        if self._image == None:
+            self._image = self._decode_image()
+        return self._image
+    image = property(_get_image)
+
 
     def _decode_image(self):
         def behead(pbm, width, height):

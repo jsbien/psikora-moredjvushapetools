@@ -96,7 +96,7 @@ class LabelPanel(wx.Panel):
     
             imagepanel = wx.Panel(self.inner_panel)
             imagesizer = wx.BoxSizer(wx.VERTICAL)
-            shapeImage = wx.StaticBitmap(imagepanel, -1, PilImageToWxBitmap(shape.get_image()))
+            shapeImage = wx.StaticBitmap(imagepanel, -1, PilImageToWxBitmap(shape.image))
             imagesizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, 5)
             imagepanel.SetSizer(imagesizer)
             sizer.Add(imagepanel, 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)

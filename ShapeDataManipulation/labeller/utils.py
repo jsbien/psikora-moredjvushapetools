@@ -58,3 +58,6 @@ debug.write("Execution started " +repr(datetime.now()) + "\n")
 
 def log(message):
     debug.write(message + "\n")
+    
+def save_hocr(stream):
+    pass

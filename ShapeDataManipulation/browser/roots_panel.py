@@ -17,7 +17,7 @@ class RootPanel(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
         imagePanel = wx.Panel(self)
         imageSizer = wx.BoxSizer(wx.HORIZONTAL)
-        shapeImage = wx.StaticBitmap(imagePanel, -1, PilImageToWxBitmap(self.shape.get_image()))
+        shapeImage = wx.StaticBitmap(imagePanel, -1, PilImageToWxBitmap(self.shape.image))
         imageSizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, 5)
         imagePanel.SetSizer(imageSizer)
         

@@ -52,7 +52,9 @@ class Node(object):
         self._w = x1 - x0
         self._h = y1 - y0
         self._link_left = self._link_right = self._link_parent = wref(None)
-
+        self.shapes = []
+        self.blits = []
+        
     @property
     def sexpr(self):
         return self._construct_sexpr()
@@ -198,7 +200,7 @@ class LeafNode(Node):
     def __init__(self, sexpr, owner):
         Node.__init__(self, sexpr, owner)
         self._text = sexpr[5].value.decode('UTF-8', 'replace')
-        self.shapes = []
+        
 
     def _construct_sexpr(self):
         x, y, w, h = self.x, self.y, self.w, self.h

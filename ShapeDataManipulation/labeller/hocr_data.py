@@ -60,11 +60,18 @@ class DatahOCR:
             blit_rects.append(rect)
         #for node in self.hocr_pages[translated_page_no].chars:
         for node in self.text_model[translated_page_no].chars:
-            node_rect = Rect(node.x, node.y, node.w, node.h)
+            node_rect = Rect(*node.rect)
             for blit_rect in blit_rects:
                 if node_rect.intersect(blit_rect):
                     node.shapes.append(blit_rect.shape)
-            
+                    node.blits.append(blit_rect)
+        for node in self.text_model[translated_page_no].lines:
+            node_rect = Rect(*node.rect)
+            for blit_rect in blit_rects:
+                if node_rect.intersect(blit_rect):
+                    #node.shapes.append(blit_rect.shape)
+                    node.blits.append(blit_rect)
+                    
     def next_shape(self, previous = False, find_unlabeled = False):
         if previous:
             direction = -1
@@ -77,6 +84,19 @@ class DatahOCR:
        
     def get_line_text(self):
         return self.text_model.get_line_text()
+
+    def get_line_rect(self):
+        node = self.text_model[self.text_model.current_page].current_line_node
+        rect = Rect(node.x, node.y, node.w, node.h)
+        return rect
+    
+    def get_char_rect(self):
+        node = self.text_model[self.text_model.current_page].current_char_node
+        rect = Rect(node.x, node.y, node.w, node.h)
+        return rect
+    
+    def get_line_blits(self):
+        return self.text_model[self.text_model.current_page].current_line_node.blits
 
     def _get_page_no(self):
         return self.text_model.current_page

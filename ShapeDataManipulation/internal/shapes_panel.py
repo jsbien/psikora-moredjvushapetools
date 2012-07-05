@@ -29,8 +29,8 @@ class _ShapePanel(wx.Panel):
         self.shape = shape
         self.shapes_panel = shapes_panel
         sizer = wx.BoxSizer(wx.VERTICAL)
-        #shapeImage = wx.StaticBitmap(self, -1, Pil(self.shape.get_image()))
-        shapeImage = wx.StaticBitmap(self, -1, PilImageToWxBitmap(self.shape.get_image()))
+        #shapeImage = wx.StaticBitmap(self, -1, Pil(self.shape.image)
+        shapeImage = wx.StaticBitmap(self, -1, PilImageToWxBitmap(self.shape.image))
         sizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, shape_image_margin)
         
         tooltip_text = "Poziom węzła: " + str(shape.hierarchy_depth()+1) + '\n'

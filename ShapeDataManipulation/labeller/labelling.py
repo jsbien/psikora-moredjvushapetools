@@ -1,12 +1,26 @@
+# -*- coding: utf-8 -*-
 '''
-Created on Jun 3, 2012
+    hOCR Labeller of DjVu shapes    
+    Copyright (C) 2012 Piotr Sikora
 
-@author: zasvid
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import wx
 from internal.label_panel import LabelPanel
 from internal.shapes_panel import ShapesPanel
+from labeller.line_preview import LinePreviewPanel
 
 class LabellingPanel(wx.Panel):
     
@@ -17,14 +31,14 @@ class LabellingPanel(wx.Panel):
         self.data_hocr = data_hocr
         
         sizer = wx.BoxSizer(orient = wx.VERTICAL)
-        panel = wx.Panel(self)
-        sizer.Add(panel, 0, wx.EXPAND)
-        
+        self.line_preview_panel = LinePreviewPanel(parent = self)
+        sizer.Add(self.line_preview_panel, flag = wx.EXPAND)
+        sizer.AddSpacer((3,3))
         width, _ = self.GetSize()
         self.line_edit = wx.TextCtrl(self, size = (20, width))
 
-        sizer.Add(self.line_edit, 0, wx.EXPAND)
-        sizer.AddSpacer((5,5))
+        sizer.Add(self.line_edit, flag = wx.EXPAND)
+        sizer.AddSpacer((3,3))
 
         label_sizer = wx.BoxSizer(orient = wx.HORIZONTAL)        
         self.label = LabelPanel(parent = self, labelling = True, data = self.data)
@@ -34,14 +48,17 @@ class LabellingPanel(wx.Panel):
         label_sizer.Add(self.label, 1, wx.ALL | wx.EXPAND, 5)
         label_sizer.Add(self.shapes, 1, wx.ALL | wx.EXPAND, 5)
                 
-        sizer.Add(label_sizer, 1, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(label_sizer, 1, flag =  wx.ALL | wx.EXPAND)
         self.SetSizer(sizer)
         
     def regenerate(self):
         self.line_edit.ChangeValue(self.data_hocr.get_line_text())
         self.line_edit.SetFocus()
+        #TODO: only if line changed
+        self.line_preview_panel.generate_preview(self.data_hocr.get_line_rect(), self.data_hocr.get_line_blits(), self.data_hocr.get_char_rect())
         self.label.regenerate(self.get_selected_character())
         self.shapes.regenerate()
+        self.Layout()
         self.Refresh()
         self.Update()
     
