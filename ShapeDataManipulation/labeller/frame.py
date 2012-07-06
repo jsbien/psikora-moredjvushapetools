@@ -186,7 +186,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             self.context_panel.update_page_widget(new_document = True, new_page = True)
             self.labelling_panel.regenerate()
         except djvu.decode.JobFailed as exc:
-            print("Opening djvu file failed: "+ str(sys.exc_info())
+            print("Opening djvu file failed: "+ str(sys.exc_info()))
             self.data_hocr.text_model = None
             self.data_hocr.document = None
         
