@@ -175,7 +175,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                     page_no, hocr_page = page_data
                     self.data_hocr.add_page(page_no, hocr_page)
             print(str("Trying to open: " + str(path + os.sep + doc_name)))
-            self.open_djvu_file(path + os.sep + doc_name)
+            self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1])
             
             
     def open_djvu_file(self, filename):
