@@ -57,6 +57,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         self.menubar = wx.MenuBar()
         self.SetMenuBar(self.menubar)
         self.toolbar = self.CreateToolBar()
+        self.statusbar = self.CreateStatusBar()
         self.new_document = False
         self._menu_items = {}
         self._menus = {}
@@ -77,6 +78,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         if self.data.current_document is not None:
             self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
             self.data.pages = self.db_manipulator.fetch_pages(self.data.current_document.db_id)
+            self.statusbar.SetStatusText("Dane dokumentu: " + str(self.data.current_document.address) + " zostały wczytane z bazy. ")
         #reset data after document change
         if self.data.current_document != previous_document:
             self.data.current_dictionary = None

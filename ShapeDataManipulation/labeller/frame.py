@@ -73,6 +73,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                               '' : ''
                             }
         
+        
+        
         # menu - database
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'ChooseDocument', self.OnChooseDocument)
@@ -180,17 +182,30 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def load_hocr_data(self):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")
         doc_name = self.data.current_document.name
+        
+        status = self.statusbar.GetStatusText()
+        hocr_status = ''
+        
         if path is not None:
             listing = os.listdir(path)
             for filename in listing:
                 page_data = page_of_hocr_data(path, filename, doc_name)
                 if page_data is not None:
-                    print("Opened " + str(path + os.sep + filename))
                     page_no, hocr_page = page_data
                     self.data_hocr.add_page(page_no, hocr_page)
-            print(str("Trying to open: " + str(path + os.sep + doc_name)))
-            self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1])
-            
+                    hocr_status += str(page_no) + ' '
+            if self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]):
+                status += " Otwarto plik z dokumentem. "
+            else:#inform of failure
+                msg = wx.MessageDialog(self, "Nie udało się otworzyć pliku .djvu dla dokumentu " + doc_name.split(os.sep)[-1],
+                                        "Uwaga", wx.OK | wx.ICON_WARNING)
+                msg.ShowModal()
+                msg.Destroy()
+        if hocr_status == '':
+            status += " Nie załadowano hOCR dla żadnej strony. "
+        else:
+            status += " Załadowano hOCR dla stron: " + hocr_status
+        self.statusbar.SetStatusText(status)
             
     def open_djvu_file(self, filename):
         try:
@@ -199,10 +214,12 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             #self.update_title()
             self.context_panel.update_page_widget(new_document = True, new_page = True)
             self.labelling_panel.regenerate()
+            return True
         except djvu.decode.JobFailed as exc:
             print("Opening djvu file failed: "+ str(sys.exc_info()))
             self.data_hocr.text_model = None
             self.data_hocr.document = None
+            return False
         
     def open_directory(self, dialog_title):
         if self.last_visited_directory is None:
