@@ -662,9 +662,6 @@ class PageWidget(wx.lib.ogl.ShapeCanvas):
             items = []
             if node is not None:
                 items.append((node, TextShape(node, have_text, xform_text_to_screen)))
-            node = self._page_text.current_char_node
-            if node is not None:
-                items.append((node, TextShape(node, have_text, xform_text_to_screen)))    
             self._nonraster_shapes = tuple(shape for node, shape in items)
             self._nonraster_shapes_map = dict(items)
         except decode.NotAvailable:
