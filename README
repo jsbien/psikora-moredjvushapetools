@@ -1,0 +1,51 @@
+MORE-DJVU-SHAPE-TOOLS
+=====================
+
+INFO
+====
+MoreDjVuShapeTools is a collection of tools for manipulating 
+a MySQL database containing shape libraries extracted from DjVu documents
+via exportshapes tools (see https://bitbucket.org/piotr_sikora/djvulibre-shape-tools).
+
+MoreDjVuShapeTools are made available by the Formal Linguistics Department
+of the University of Warsaw. They have been implemented by Piotr Sikora.
+The ideas behind this suite of tools were developed by Janusz S. Bień.
+
+The work is supported by the Ministry of Science and Higher Education's 
+grant no. N N519 384036 (cf. https://bitbucket.org/jsbien/ndt). 
+
+REQUIREMENTS
+============
+
+MoreDjVuShapeTools require:
+
+	* python 2.7+
+	* wxpython 2.8 - unicode version.
+	* Python Imaging Library
+	* python interface to mysql - mysqldb module
+	* djvulibre
+	* python bindings for djvulibre (http://jwilk.net/software/python-djvulibre)
+	* libxml2
+	* python bindings for libxml2 - lxml (http://lxml.de/)
+
+
+INSTALLATION
+============
+
+
+USAGE
+=====
+
+To use any of the tools in the suite, you need to provide it with a database name,
+host name, username and password. This will start a GUI up connected to
+the given database.
+
+An user account used by DjVuShapeTools needs to have privileges to
+CREATE, DROP, INSERT, SELECT and ALTER a given database.
+
+python <tool_name>.py -u <username> -p <password> -h <host> -d <database>
+
+DATABASE STRUCTURE
+==================
+
+Structure of the database used by this suite of tools is described in DATABASE_STRUCTURE file.

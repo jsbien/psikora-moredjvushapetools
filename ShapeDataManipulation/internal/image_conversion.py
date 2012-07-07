@@ -1,6 +1,30 @@
-'''
-Code from: http://wiki.wxpython.org/WorkingWithImages
-'''
+# -*- coding: utf-8 -*-
+"""
+Based on pyWiki 'Working With Images' @  http://wiki.wxpython.org/index.cgi/WorkingWithImages
+Modified to properly copy, create or remove any alpha in all conversion permutations.
+A wx.App must be created in order for the various wx functions to work.
+
+Win32IconImagePlugin  
+Alternate PIL plugin for dealing with Microsoft .ico files.
+http://code.google.com/p/casadebender/wiki/Win32IconImagePlugin
+
+Note:  The terms "plane", "band", "layer" and "channel" are used interchangibly.
+
+Tested on Win7 64-bit (6.1.7600) and Win XP SP3 (5.1.2600) using Python unicode 32-bit.
+
+Platform  Windows 6.1.7600
+Python    2.5.4 (r254:67916, Dec 23 2008, 15:10:54) [MSC v.1310 32 bit (Intel) (x86)]
+Python wx 2.8.10.1
+Pil       1.1.7
+
+Ray Pasco      
+pascor(at)verizon(dot)net
+
+Last modification:      2011-05-15      Added WxImageFromPilImage import.
+
+This code may be freely modified and distributed for any purpose whatsoever.
+
+"""
 
 import wx
 import Image             # PIL module. Only if you use the PIL library.

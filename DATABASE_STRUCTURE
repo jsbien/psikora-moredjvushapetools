@@ -1,0 +1,39 @@
+TABLE shapes:
+id INT not null auto_increment primary key,
+original_id INT not null, -- index in the page dictionary the shape comes from
+parent_id INT not null, -- references other shapes
+bits LONGBLOB,
+width INT,
+height INT,
+dictionary_id INT not null, --references table of dictionaries
+bbox_top INT, bbox_left INT, bbox_right INT, bbox_bottom INT -- bounding box
+
+TABLE blits: -- shapes' locations in document
+id INT not null auto_increment primary key,
+document_id INT not null, -- references table of documents
+page_number INT not null,
+shape_id INT not null, -- references table of shapes
+b_left SMALLINT UNSIGNED not null,
+b_bottom SMALLINT UNSIGNED not null
+
+TABLE documents: -- documents stored in the database
+id INT not null auto_increment primary key,
+document varchar(60) not null,
+document address(100) not null
+
+TABLE dictionaries: -- dictionaries stored in the database
+id INT not null auto_increment primary key,
+dictionary_name varchar(60) not null,
+page_number INT not null, -- which page this dictionary belongs to, inherited dictionaries have -1 in this field
+document_id INT not null -- references table of documents
+
+TABLE pages: -- linking inherited dictionaries with pages that use them
+document_id INT not null, -- which documents this entry refers to
+inh_dict_id INT not null, -- which inherited dictionary this entry refers to
+page_number INT not null -- which page uses that dictionary
+
+
+
+
+
+
