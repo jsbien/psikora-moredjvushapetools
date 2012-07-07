@@ -45,10 +45,12 @@ class _ShapePanel(wx.Panel):
         shapeImage = wx.StaticBitmap(self, -1, PilImageToWxBitmap(self.shape.image))
         sizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, shape_image_margin)
         
-        tooltip_text = "Poziom węzła: " + str(shape.hierarchy_depth()+1) + '\n'
-        #tooltip_text += "Gałąź drzewa: " + str(0) + '\n'
-        tooltip_text += "Wielkość poddrzewa: " + str(shape.count_descendants()) + '\n'
-        tooltip_text += "Wysokość poddrzewa: " + str(shape.hierarchy_height())
+        tooltip_text = "Poziom węzła: " + str(shape.hierarchy_depth()+1)
+        #tooltip_text += "\nGałąź drzewa: " + str(0)
+        tooltip_text += "\nWielkość poddrzewa: " + str(shape.count_descendants()) 
+        tooltip_text += "\nWysokość poddrzewa: " + str(shape.hierarchy_height())
+        if len(self.shapes_panel.data.blits) > 0:
+            tooltip_text += "\nIlość wystąpień w dokumencie: " + str(shape.blit_count)
         self._has_special_color = False
         
         tooltip = wx.ToolTip(tooltip_text) 

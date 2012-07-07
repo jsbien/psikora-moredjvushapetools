@@ -189,6 +189,7 @@ class ShapeData:
     def add_blits(self, blits, page_no):
         for blit in blits:
             shape = self.shapes[blit.shape_id]
+            shape.blit_count += 1
             blit.w = shape.bounding_box.right
             blit.h = shape.bounding_box.top
             blit.shape = shape

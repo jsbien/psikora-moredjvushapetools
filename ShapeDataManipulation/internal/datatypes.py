@@ -79,6 +79,7 @@ class Shape:
         self._image = None
         self.label = None
         
+        self.blit_count = 0
         self.hierarchy_count = None
         self.hierarchy_max_size = None
 
@@ -90,7 +91,6 @@ class Shape:
             self._image = self._decode_image()
         return self._image
     image = property(_get_image)
-
 
     def _decode_image(self):
         def behead(pbm, width, height):
