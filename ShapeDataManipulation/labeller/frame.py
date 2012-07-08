@@ -132,6 +132,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def choose_document_for_labelling(self):
         if self.choose_document():
             self._enable_menu_item('Data', 'LoadHOCR')
+            self._enable_menu_item('Data', 'ChooseDocument', False)
             self.data_hocr.clear()
             return True
         return False
@@ -197,14 +198,14 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             if self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]):
                 status += " Otwarto plik z dokumentem. "
             else:#inform of failure
-                msg = wx.MessageDialog(self, "Nie udało się otworzyć pliku .djvu dla dokumentu " + doc_name.split(os.sep)[-1],
+                msg = wx.MessageDialog(self, u"Nie udało się otworzyć pliku .djvu dla dokumentu " + doc_name.split(os.sep)[-1],
                                         "Uwaga", wx.OK | wx.ICON_WARNING)
                 msg.ShowModal()
                 msg.Destroy()
         if hocr_status == '':
-            status += " Nie załadowano hOCR dla żadnej strony. "
+            status += u" Nie załadowano hOCR dla żadnej strony. "
         else:
-            status += " Załadowano hOCR dla stron: " + hocr_status
+            status += u" Załadowano hOCR dla stron: " + hocr_status
         self.statusbar.SetStatusText(status)
             
     def open_djvu_file(self, filename):
@@ -255,7 +256,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def load_last_session(self):
         if os.path.isfile('last.session'):
             self.load_session() 
-        if self.choose_document():
+        if self.choose_document_for_labelling():
             self.load_hocr_data()
 
     def notify_page_change(self):
