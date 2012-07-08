@@ -52,6 +52,11 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.data_hocr = DatahOCR(self.data)
         self.last_visited_directory = None
         self.context = Context(self)
+
+        self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
+        self.labelling_panel = LabellingPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
+
+
         
         self._menuitem_strings = { 'ChooseDocument': ['Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy'],
                 'LoadHOCR': ['Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR'],
@@ -86,7 +91,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._enable_menu_item('Data', 'LoadHOCR', False)
     
         menu = wx.Menu()
-        self._add_menu_item_by_key(menu, 'NextLine', binding = self.OnNextLine)
+        self._add_menu_item_by_key(menu, 'NextLine', binding = self.labelling_panel.OnNextLine)
         self._add_menu_item_by_key(menu, 'PrevLine', binding = self.OnPrevLine)
         self._add_menu_item_by_key(menu, 'NextChar', binding = self.OnNextChar)
         self._add_menu_item_by_key(menu, 'NextCharCommit', binding = self.OnNextCharCommit)
@@ -109,13 +114,10 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         
-        panel = self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
         self.page_widget = self.context_panel.page_widget
         self.page_widget.render_mode = djvu.decode.RENDER_FOREGROUND
-        mainSizer.Add(panel, 4, wx.EXPAND | wx.ALL, 1)
-        
-        panel = self.labelling_panel = LabellingPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
-        mainSizer.Add(panel, 5, wx.EXPAND | wx.ALL, 1)        
+        mainSizer.Add(self.context_panel, 3, wx.EXPAND | wx.ALL, 1)
+        mainSizer.Add(self.labelling_panel, 5, wx.EXPAND | wx.ALL, 1)        
 
         self.SetSizer(mainSizer)
 
@@ -140,9 +142,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def OnLoadHOCR(self, event):
         self.load_hocr_data()
     
-    def OnNextLine(self, event):
-        self.data_hocr.text_model.next_line()
-        self.labelling_panel.regenerate()
+
 
     def OnPrevLine(self, event):
         self.data_hocr.text_model.prev_line()
@@ -293,7 +293,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             (_('&Stretch'),    _('Stretch the image to the window size'), StretchZoom(),  None),
             (_('One &to one'), _('Set full resolution magnification.'),   OneToOneZoom(), wx.ID_ZOOM_100),
         ]:
-            self._add_menu_item(submenu, caption, help, self.on_zoom(zoom), kind=wx.ITEM_RADIO, id = id or wx.ID_ANY)
+            item = self._add_menu_item(submenu, caption, help, self.on_zoom(zoom), kind=wx.ITEM_RADIO, id = id or wx.ID_ANY)
+            if item.GetId() == wx.ID_ZOOM_FIT:
+                item.Check()
         submenu.AppendSeparator()
         self.zoom_menu_items = {}
         for percent in 300, 200, 150, 100, 75, 50, 25:
@@ -304,8 +306,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                 self.on_zoom(PercentZoom(percent)),
                 kind=wx.ITEM_RADIO
             )
-            if percent == 100:
-                item.Check()
+
+
             self.zoom_menu_items[percent] = item
         menu.AppendMenu(wx.ID_ANY, _('&Zoom'), submenu)
         submenu = wx.Menu()
@@ -317,7 +319,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             (_('&Background'),        _('Display only the background layer'),                             self.on_display_background),
             (_('&None') + '\tAlt+N',  _('Neither display the foreground layer nor the background layer'), self.on_display_none)
         ]:
-            self._add_menu_item(submenu, caption, help, method, kind=wx.ITEM_RADIO)
+            item = self._add_menu_item(submenu, caption, help, method, kind=wx.ITEM_RADIO)
+            if caption == _('&Foreground'):
+                item.Check()
         menu.AppendMenu(wx.ID_ANY, _('&Image'), submenu)
         """
         submenu = wx.Menu()

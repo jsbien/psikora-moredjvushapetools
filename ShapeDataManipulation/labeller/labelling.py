@@ -54,7 +54,6 @@ class LabellingPanel(wx.Panel):
     def regenerate(self):
         self.line_edit.ChangeValue(self.data_hocr.get_line_text())
         self.line_edit.SetFocus()
-        #TODO: only if line changed
         self.line_preview_panel.generate_preview(self.data_hocr.get_line_rect(), self.data_hocr.get_line_blits(), self.data_hocr.get_char_rect())
         self.label.regenerate(self.get_selected_character())
         self.shapes.regenerate()
@@ -69,3 +68,7 @@ class LabellingPanel(wx.Panel):
     
     def save_label(self):
         self.label.save_label(self.get_selected_character())
+        
+    def OnNextLine(self, event):
+        self.data_hocr.text_model.next_line()
+        self.regenerate()
