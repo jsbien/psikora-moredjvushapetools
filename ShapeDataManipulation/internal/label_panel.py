@@ -83,7 +83,7 @@ class LabelPanel(wx.Panel):
             cb_style = cb_style | wx.CB_READONLY
         return wx.ComboBox(self.inner_panel, choices = values, style = cb_style)
 
-    def regenerate(self, unicode_char = None):
+    def regenerate(self, unicode_chars = None):
         
         self._comboboxes = {}
         self.inner_panel.DestroyChildren()
@@ -103,9 +103,10 @@ class LabelPanel(wx.Panel):
             self.layout_item(sizer, 'size', self.label(str(shape.width) + " x " + str(shape.height)))
             sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             if self.labelling:
-                self.layout_item(sizer, 'textel', self.label(unicode_char))
-                self.layout_item(sizer, 'textel_code', self.label(str(unicode_code(unicode_char))))
-                self.layout_item(sizer, 'textel_name', self.label(unicode_name(unicode_char)))
+                for char in unicode_chars:
+                    self.layout_item(sizer, 'textel', self.label(char))
+                    self.layout_item(sizer, 'textel_code', self.label(str(unicode_code(char))))
+                    self.layout_item(sizer, 'textel_name', self.label(unicode_name(char)))
                 self._comboboxes['textel_type'] = self.layout_item(sizer, 'textel_type', self.combo(self.data.textel_types, readonly = True))
                 self._comboboxes['font_type'] = self.layout_item(sizer, 'font_type', self.combo(self.data.font_types.values()))
                 self._comboboxes['font'] = self.layout_item(sizer, 'font', self.combo(self.data.fonts.values()))
