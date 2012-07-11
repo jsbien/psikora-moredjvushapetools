@@ -37,6 +37,8 @@ from djvusmooth.i18n import _
 import djvu.decode
 import djvu.const
 
+from ocrodjvu.djvu2hocr import save_hocr
+
 from internal.frame import DjVuShapeToolsFrame
 from labeller.utils import page_of_hocr_data
 import sys
@@ -49,6 +51,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
 
         wx.lib.ogl.OGLInitialize()
 
+        self._hocr_filepaths = []
         self.data_hocr = DatahOCR(self.data)
         self.last_visited_directory = None
         self.context = Context(self)
@@ -56,10 +59,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
         self.labelling_panel = LabellingPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
 
-
-        
         self._menuitem_strings = { 'ChooseDocument': ['Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy'],
                 'LoadHOCR': ['Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR'],
+                'SaveHOCR': ['Zapisz pliki z &hOCR', 'Zapisuje zmiany w hOCR do plików'],
                 'Quit': ['&Wyjście', 'Wyjdź z programu'],
                 'NextLine': ['Następny wiersz' + '\tCtrl+Alt+N', 'Przejdź do następnego wiersza'],
                 'PrevLine': ['Poprzedni wiersz' + '\tCtrl+Alt+P', 'Przejdź do poprzedniego wiersza'],
@@ -73,8 +75,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                 }
         self._menu_strings = { 'Data' : '&Dane',
                               #'View' : _('&View'),
-                              'View' : 'Widok',
+                              'View' : '&Widok',
                               'hOCR' : '&hOCR',
+                              'File' : '&Plik',
                               '' : ''
                             }
         
@@ -89,6 +92,10 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._add_menu_item_by_key(menu, 'Quit', binding = self.OnQuit)
         self._append_menu(self.menubar, menu, 'Data')
         self._enable_menu_item('Data', 'LoadHOCR', False)
+    
+        menu = wx.Menu()
+        self._add_menu_item_by_key(menu, 'SaveHOCR', self.OnSaveHOCR)
+        self._append_menu(self.menubar, menu, 'File')
     
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'NextLine', binding = self.labelling_panel.OnNextLine)
@@ -123,10 +130,17 @@ class hOCRLabeller(DjVuShapeToolsFrame):
 
         #TODO: global binding of keystrokes
         self.page_widget.Bind(wx.EVT_CHAR, self.on_char)
-
+        self.Bind(wx.EVT_CLOSE, self.OnLabellerExit)
         self.Maximize()
         self.Centre()
         self.Show(True)
+    
+    def OnLabellerExit(self, event):
+        if self.labelling_panel.dirty_hocr:
+            print("Saving hOCR files...")
+            self.save_hocr_data()
+            print("hOCR files saved!")
+        event.Skip()
     
     def OnChooseDocument(self, event):
         self.choose_document_for_labelling()
@@ -142,7 +156,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def OnLoadHOCR(self, event):
         self.load_hocr_data()
     
-
+    def OnSaveHOCR(self, event):
+        self.save_hocr_data()
 
     def OnPrevLine(self, event):
         self.data_hocr.text_model.prev_line()
@@ -193,6 +208,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                 page_data = page_of_hocr_data(path, filename, doc_name)
                 if page_data is not None:
                     page_no, hocr_page = page_data
+                    self._hocr_filepaths.append((page_no, path + os.sep + filename))
                     self.data_hocr.add_page(page_no, hocr_page)
                     hocr_status += str(page_no) + ' '
             if self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]):
@@ -207,6 +223,15 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         else:
             status += u" Załadowano hOCR dla stron: " + hocr_status
         self.statusbar.SetStatusText(status)
+    
+    def save_hocr_data(self):
+        try:
+            for page_no, hocr_filepath in self._hocr_filepaths:
+                with open(hocr_filepath, 'w') as hocr_file:
+                    save_hocr(hocr_file, self.data_hocr.text_model[page_no])
+        except :
+            print("Error while saving hOCR data to file:", sys.exc_info())
+
             
     def open_djvu_file(self, filename):
         try:

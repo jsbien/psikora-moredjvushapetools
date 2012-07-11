@@ -24,7 +24,6 @@ import unicodedata
 
 
 def page_of_hocr_data(path, filename, document_name):
-    
     doc = document_name.split(sep)[-1].replace('.djvu','')
     if filename[len(doc):len(doc)+5] == '-page' and filename[len(filename)-5:] == '.html':
         page_no = int(filename.replace('.html','')[len(doc)+5:])

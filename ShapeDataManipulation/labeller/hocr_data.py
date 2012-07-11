@@ -206,6 +206,10 @@ class TextModel(djvusmooth.models.text.Text):
         return len(list(self[self.current_page].current_line_node.get_leafs()))    
     current_line_len = property(_current_line_len)
     
+    def _get_current_char_node(self):
+        return self[self.current_page].current_char_node
+    current_char_node = property(_get_current_char_node)
+    
     def prev_line(self, character_shift = 0):
         current_line = self.current_line
         self.current_line -= 1
@@ -217,6 +221,9 @@ class TextModel(djvusmooth.models.text.Text):
                  node.text + ' '
                  for node in iter(self[self.current_page].current_line_node)
                  ])
+
+    def get_char_text(self):
+        return self[self.current_page].current_char_node.text
     
     def get_current_char_position(self):
         nodes = self[self.current_page].current_line_node.get_postorder_nodes()
@@ -243,8 +250,12 @@ class TextModel(djvusmooth.models.text.Text):
             self._current_char = value
             self.at_limit = False
         self[self.current_page].current_char = self._current_char
-        self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
-        self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
+        if self[self.current_page].current_char_node.shapes:
+            self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
+            self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
+        else:
+            self.data.current_shape = None
+            self.data.current_hierarchy = None
     current_char = property(_get_current_char, _set_current_char)
     
     def _get_current_line(self):

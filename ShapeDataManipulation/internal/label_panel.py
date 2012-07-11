@@ -142,10 +142,10 @@ class LabelPanel(wx.Panel):
                     self.layout_item(sizer, 'font', self.label(str(shape.label.fonts)))
                     self.layout_item(sizer, 'font_size', self.label(str(shape.label.font_sizes)))
             sizer.AddStretchSpacer()
-            sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
-            self.layout_item(sizer, 'doc_name', self.label(str(self.data.current_document.name)))
-            #self.layout_item(sizer, 'doc_address', self.label(str(self.data.current_document.address)))
+            #sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             if not self.labelling:
+                # self.layout_item(sizer, 'doc_name', self.label(str(self.data.current_document.name)))
+                # self.layout_item(sizer, 'doc_address', self.label(str(self.data.current_document.address)))
                 self.layout_item(sizer, 'dict_name', self.label(str(self.data.current_dictionary.name)))
                 self.layout_item(sizer, 'hierarchy_count', self.label(str(len(self.data.shape_hierarchies))))
                 self.layout_item(sizer, 'dict_shape_count', self.label(str(len(self.data.shapes))))

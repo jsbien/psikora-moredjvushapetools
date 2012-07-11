@@ -104,14 +104,13 @@ class Node(object):
             self._notify_change()
         return property(get, set)
 
-    @apply
-    def rect():
-        def get(self):
-            return self._x, self._y, self._w, self._h
-        def set(self, value):
-            self._x, self._y, self._w, self._h = value
-            self._notify_change()
-        return property(get, set)
+
+    def _get_rect(self):
+        return self._x, self._y, self._w, self._h
+    def _set_rect(self, value):
+        self._x, self._y, self._w, self._h = value
+        self._notify_change()
+    rect = property(_get_rect, _set_rect) 
 
     @apply
     def type():
