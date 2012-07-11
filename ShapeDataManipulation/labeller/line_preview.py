@@ -29,11 +29,17 @@ class LinePreviewPanel(wx.lib.scrolledpanel.ScrolledPanel):
         self.bitmap = None
         
     def generate_preview(self, line_rect, blits, char):
+        panel_width, _ = self.GetSize()
         if self.bitmap is not None:
             #self.sizer.Remove(self.bitmap)
             self.bitmap.Destroy()
-        self.left0, self.top0 = line_rect.x - 2, line_rect.y + line_rect.h + 2
-        image = empty_image(line_rect.w + 4, line_rect.h + 4)
+        self.left0 = line_rect.x - 2
+        #adjust for panel width
+        while char.x + char.w + 3 - self.left0 > panel_width:
+            self.left0 += 9 * (panel_width/10)
+        
+        self.top0 = line_rect.y + line_rect.h + 2
+        image = empty_image(panel_width, line_rect.h + 4)
         for blit in blits:
             image.Paste(PilImageToWxImage(blit.shape.image), blit.x - self.left0, self.top0 - blit.y - blit.h)
         #draw lines
