@@ -214,7 +214,7 @@ class TextModel(djvusmooth.models.text.Text):
         current_line = self.current_line
         self.current_line -= 1
         if self.current_line != current_line:
-            self.current_char = self.current_line_len + character_shift 
+            self.current_char = self.current_line_len - 1 + character_shift 
     
     def get_line_text(self):
         return ''.join([
