@@ -245,8 +245,9 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def save_hocr_data(self):
         try:
             for page_no, hocr_filepath in self._hocr_filepaths:
-                with open(hocr_filepath, 'w') as hocr_file:
-                    save_hocr(hocr_file, self.data_hocr.text_model[page_no])
+                if self.labelling_panel.dirty_hocr.get(page_no, False):
+                    with open(hocr_filepath, 'w') as hocr_file:
+                        save_hocr(hocr_file, self.data_hocr.text_model[page_no])
         except :
             print("Error while saving hOCR data to file:", sys.exc_info())
 

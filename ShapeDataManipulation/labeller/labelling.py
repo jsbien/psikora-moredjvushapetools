@@ -26,8 +26,8 @@ class LabellingPanel(wx.Panel):
     
     def __init__(self, data, data_hocr, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
-        
-        self.dirty_hocr = False
+        self._dirty_label = False
+        self.dirty_hocr = {}
         self.data = data
         self.data_hocr = data_hocr
         
@@ -52,17 +52,17 @@ class LabellingPanel(wx.Panel):
         sizer.Add(label_sizer, 1, flag =  wx.ALL | wx.EXPAND)
         self.SetSizer(sizer)
         
-        self.Bind(wx.EVT_TEXT, self.OnTextChange)
+        self.line_edit.Bind(wx.EVT_TEXT, self.OnTextChange)
         
     def OnTextChange(self, event):
         text = self.get_selected_character()
         if len(text) > 0:
-            self.data_hocr.text_model.current_char_node.text = text
             self.label.regenerate(text)
-        self.dirty_hocr = True
+        self._dirty_label = True
         
     def regenerate(self):
         #self.line_edit.ChangeValue(self.data_hocr.get_line_text())
+        self._dirty_label = False
         self.line_edit.ChangeValue(self.data_hocr.text_model.get_char_text())
         self.line_edit.SetFocus()
         self.line_preview_panel.generate_preview(self.data_hocr.get_line_rect(), self.data_hocr.get_line_blits(), self.data_hocr.get_char_rect())
@@ -79,7 +79,19 @@ class LabellingPanel(wx.Panel):
         return self.line_edit.GetValue()
     
     def save_label(self):
-        self.label.save_label(self.get_selected_character())
+        characters = self.get_selected_character()
+        if self._dirty_label:
+            if len(characters) > 1:
+                #multiply character nodes
+                pass
+            elif len(characters) < 0:
+                #delete node
+                pass
+            else: #only 1 character
+                self.data_hocr.text_model.current_char_node.text = characters
+                self.dirty_hocr[self.data_hocr.text_model.current_page] = True
+        if len(characters) == 1:
+            self.label.save_label(characters)
         
     def OnNextLine(self, event):
         self.data_hocr.text_model.next_line()

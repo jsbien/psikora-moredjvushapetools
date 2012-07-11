@@ -173,28 +173,31 @@ class LabelPanel(wx.Panel):
         return (db_id, font_trait_value)
         
 
-    def save_label(self, unicode_character):
+    def save_label(self, unicode_characters):
         if self._dirty:
             self._dirty = False
             font_id, font = self._save_font_trait('font', self.data.fonts)
             font_type_id, font_type = self._save_font_trait('font_type', self.data.font_types)
             font_size_id, font_size = self._save_font_trait('font_size', self.data.font_sizes)
-            #save unicode character
-            uchar_id = self.data.uchar_id(unicode_character, unicode_name(unicode_character))
+            #save unicode characters
+            uchar_ids = []
+            for unicode_character in unicode_characters:
+                uchar_ids.append(self.data.uchar_id(unicode_character, unicode_name(unicode_character)))
             textel_type = self._comboboxes['textel_type'].GetValue()
             self._last_values['textel_type'] = textel_type
             #save a label
             label = Label(font_id = font_id, font = font,
                       font_type_id = font_type_id, font_type = font_type,
                       font_size_id = font_size_id, font_size = font_size,
-                      textel_id = uchar_id, textel = unicode_character, 
+                      #textel_id = uchar_id, textel = unicode_character, 
                       textel_type = textel_type
                       )
             self.data.current_shape.label = label
             label.db_id = self.data.db_manipulator.insert_label(label, self.data.user_id(self.data.db_manipulator.db_user), self.data.current_document.db_id)
         
-            #save a link between label and uchar
-            self.data.db_manipulator.insert_into_junction(table = "label_chars", fields = ("uchar_id","label_id"), values = (uchar_id, label.db_id))
+            #save a link between label and uchars
+            for uchar_id in uchar_ids:
+                self.data.db_manipulator.insert_into_junction(table = "label_chars", fields = ("uchar_id","label_id"), values = (uchar_id, label.db_id))
         
             #label the hierarchy of shapes
             for shape in self.data.current_hierarchy.linearise_hierarchy():
