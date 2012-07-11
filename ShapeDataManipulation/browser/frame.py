@@ -39,6 +39,15 @@ class ShapeBrowser(DjVuShapeToolsFrame):
         self.menubar.Append(menu, '&Hierarchie')
         self.SetSize((1024, 768))
         
+        self._app_data = {'AppName': u'Przeglądarka kształtów DjVu',
+                          'Author' : u'Piotr Sikora',
+                          'License' : u'GPL-3',
+                          'Website' : u'https://bitbucket.org/piotr_sikora/moredjvushapetools/',
+                          'Notes': u'The ideas behind this application were developed by Janusz S. Bień.\n' \
+                                    'The work has been supported by the Ministry of Science and Higher Education\'s ' \
+                                    'grant no. N N519 384036 (cf. https://bitbucket.org/jsbien/ndt).'
+                          }
+        
         self.label_panel = LabelPanel(parent = self, data = self.data)
         self.shapes = ShapesPanel(data = self.data, target_panel = self.label_panel, parent = self)
         self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panel = self.shapes)

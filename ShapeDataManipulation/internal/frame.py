@@ -22,6 +22,9 @@ from internal.database_manipulation import DatabaseManipulator
 from internal.dialogs import *
 from internal.data import ShapeData
 
+def i18n(string):
+    return string
+
 class DjVuShapeToolsFrame(wx.Frame):
     
     def _add_menu_item_by_key(self, menu, menu_key, binding, kind = wx.ITEM_NORMAL, id = wx.ID_ANY):
@@ -52,7 +55,6 @@ class DjVuShapeToolsFrame(wx.Frame):
 
         # binding general behaviour
         self.Bind(wx.EVT_CLOSE, self.OnExit)
-        
         #building a menu
         self.menubar = wx.MenuBar()
         self.SetMenuBar(self.menubar)
@@ -61,6 +63,24 @@ class DjVuShapeToolsFrame(wx.Frame):
         self.new_document = False
         self._menu_items = {}
         self._menus = {}
+        self._app_data = {}
+        
+    def on_about(self, event):
+        message = self._app_data.get('AppName', '') + ' ' + self._app_data.get('AppVersion','') + '\n'
+        message += i18n('Author') + ': ' + self._app_data.get('Author','') + '\n'
+        message += i18n('License') + ': ' + self._app_data.get('License','') + '\n'
+        message += i18n('Website') + ': '  + self._app_data.get('Website','') + '\n'
+        message += self._app_data.get('Notes','')
+        wx.MessageBox(message = message, caption = i18n(u'About…'))
+
+    def on_shortcuts(self, event):
+        msg = u''
+        for menustring, help_text in self._menuitem_strings.values():
+            find_shortcut = menustring.split('\t')
+            if len(find_shortcut) == 2:
+                msg += find_shortcut[1] + " : • " + help_text + '\n'
+        wx.MessageBox(message=msg, caption=u'Skróty klawiaturowe')
+        
         
     def connect_to_database(self, db_name, db_host, db_user, db_pass):
         if hasattr(self,'db_manipulator'):

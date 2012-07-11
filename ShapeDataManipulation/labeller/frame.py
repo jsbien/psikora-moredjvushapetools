@@ -43,6 +43,8 @@ from internal.frame import DjVuShapeToolsFrame
 from labeller.utils import page_of_hocr_data
 import sys
 
+def i18n(string):
+    return _(string)
 
 class hOCRLabeller(DjVuShapeToolsFrame):
     
@@ -59,28 +61,38 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
         self.labelling_panel = LabellingPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
 
-        self._menuitem_strings = { 'ChooseDocument': ['Wybierz &Dokument', 'Wyświetla okno wyboru dokumentu z bazy'],
-                'LoadHOCR': ['Otwórz pliki z &hOCR', 'Wyświetla okno wybór plików zawierających dane hOCR'],
-                'SaveHOCR': ['Zapisz pliki z &hOCR', 'Zapisuje zmiany w hOCR do plików'],
-                'Quit': ['&Wyjście', 'Wyjdź z programu'],
-                'NextLine': ['Następny wiersz' + '\tCtrl+Alt+N', 'Przejdź do następnego wiersza'],
-                'PrevLine': ['Poprzedni wiersz' + '\tCtrl+Alt+P', 'Przejdź do poprzedniego wiersza'],
-                'NextChar': ['Następny kształt' + '\tCtrl+Shift+N', 'Przejdź do następnego kształtu bez zatwierdzenia etykiety'],
-                'PrevChar': ['Poprzedni kształt' + '\tCtrl+P', 'Przejdź do poprzedniego kształtu bez zatwierdzenia etykiety'],
-                'PrevCharToLabel': ['Poprzedni niezaetykietowany kształt' + '\tCtrl+W', 'Przejdź do poprzedniego niezaetykietowanego kształtu bez zatwierdzenia etykiety'],
-                'NextCharCommit': ['Zatwierdź etykietę' + '\tCtrl+N', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
-                'NextCharToLabel': ['Następny niezaetykietowany kształt' + '\tCtrl+Shift+E',
+        self._menuitem_strings = { 'ChooseDocument': [u'Wybierz &Dokument', u'Wyświetla okno wyboru dokumentu z bazy'],
+                'LoadHOCR': [u'Otwórz pliki z &hOCR', u'Wyświetla okno wybór plików zawierających dane hOCR'],
+                'SaveHOCR': [u'Zapisz pliki z &hOCR', u'Zapisuje zmiany w hOCR do plików'],
+                'Quit': [u'&Wyjście', u'Wyjdź z programu'],
+                'NextLine': [u'Następny wiersz \tCtrl+Alt+N', u'Przejdź do następnego wiersza'],
+                'PrevLine': [u'Poprzedni wiersz \tCtrl+Alt+P', u'Przejdź do poprzedniego wiersza'],
+                'NextChar': [u'Następny kształt \tCtrl+Shift+N', u'Przejdź do następnego kształtu bez zatwierdzenia etykiety'],
+                'PrevChar': [u'Poprzedni kształt \tCtrl+P', u'Przejdź do poprzedniego kształtu bez zatwierdzenia etykiety'],
+                'PrevCharToLabel': ['Poprzedni niezaetykietowany kształt \tCtrl+W', u'Przejdź do poprzedniego niezaetykietowanego kształtu bez zatwierdzenia etykiety'],
+                'NextCharCommit': ['Zatwierdź etykietę \tCtrl+N', u'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
+                'NextCharToLabel': ['Następny niezaetykietowany kształt \tCtrl+Shift+E',
                                     'Przejdź do następnego niezaetykietowanego kształtu bez zatwierdzania etykiety'],
-                'NextCharToLabelCommit': ['Zatwierdź etykietę 2' + '\tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego']
+                'NextCharToLabelCommit': ['Zatwierdź etykietę 2 \tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
+                'KeyboardShortcuts': ['&Skróty klawiaturowe\tF1', 'Lista skrótów klawiaturowych'],
+                'About' : [_('&About'), _('More information about this program')]
                 }
         self._menu_strings = { 'Data' : '&Dane',
                               #'View' : _('&View'),
                               'View' : '&Widok',
                               'hOCR' : '&hOCR',
                               'File' : '&Plik',
+                              'Help' : 'P&omoc',
                               '' : ''
                             }
-        
+        self._app_data = {'AppName': u'Etykieciarka hOCR',
+                          'Author' : u'Piotr Sikora',
+                          'License' : u'GPL-3',
+                          'Website' : u'https://bitbucket.org/piotr_sikora/moredjvushapetools/',
+                          'Notes': u'The ideas behind this application were developed by Janusz S. Bień.\n' \
+                                    'The work has been supported by the Ministry of Science and Higher Education\'s ' \
+                                    'grant no. N N519 384036 (cf. https://bitbucket.org/jsbien/ndt).'
+                          }
         
         
         # menu - database
@@ -112,7 +124,11 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._append_menu(self.menubar, menu, 'hOCR')
         
         self._append_menu(self.menubar, self._create_view_menu(), 'View')
-
+       
+        menu = wx.Menu()
+        self._add_menu_item_by_key(menu, 'KeyboardShortcuts', binding = self.on_shortcuts)
+        self._add_menu_item_by_key(menu, 'About', binding = self.on_about, id=wx.ID_ABOUT)
+        self._append_menu(self.menubar, menu, 'Help')
         #tool = toolbar.AddLabelTool(wx.ID_ANY, 'Prz', wx.Bitmap('texit.png'))
         #TODO: make icons
         self.toolbar.Realize()
@@ -134,6 +150,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.Maximize()
         self.Centre()
         self.Show(True)
+    
+
     
     def OnLabellerExit(self, event):
         if self.labelling_panel.dirty_hocr:
