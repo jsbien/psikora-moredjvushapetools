@@ -17,11 +17,20 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import wx
+
 import wx.lib.scrolledpanel
 from internal.image_conversion import PilImageToWxBitmap   
 
-shape_image_margin = 5
+_SHAPE_IMAGE_MARGIN = 5
+
+_s = {'Title' : u'Hierarchia kształtów',
+      'VertexDepth' : u"Poziom węzła: ",
+      'SubtreeCount': u"Wielkość poddrzewa: ",
+      'SubtreeHeight': u"Wysokość poddrzewa: ",
+      'BlitCount' : u"Ilość wystąpień w dokumencie: ",
+      'CutShapeOut': u"Wytnij kształt z hierarchii",
+      'CutShapeOff': u"Odetnij poddrzewo od hierarchii"
+}
 
 def childrenOf(shapes):
     children = []
@@ -30,45 +39,49 @@ def childrenOf(shapes):
     return children
 
 def grade_color(part, full):
-    min_grade = 10
+    min_grade = 40
     max_grade = 255
     color_int = (max_grade - min_grade)*part / full + min_grade
     return hex(color_int)[2:]
+
 
 class _ShapePanel(wx.Panel):
     def __init__(self, shape, shapes_panel, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         self.shape = shape
         self.shapes_panel = shapes_panel
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        #shapeImage = wx.StaticBitmap(self, -1, Pil(self.shape.image)
+        self.SetMinSize(kwargs['size'])
+        
         shapeImage = wx.StaticBitmap(self, -1, PilImageToWxBitmap(self.shape.image))
-        sizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, shape_image_margin)
-        
-        tooltip_text = "Poziom węzła: " + str(shape.hierarchy_depth()+1)
-        #tooltip_text += "\nGałąź drzewa: " + str(0)
-        tooltip_text += "\nWielkość poddrzewa: " + str(shape.count_descendants()) 
-        tooltip_text += "\nWysokość poddrzewa: " + str(shape.hierarchy_height())
-        if len(self.shapes_panel.data.blits) > 0:
-            tooltip_text += "\nIlość wystąpień w dokumencie: " + str(shape.blit_count)
-        self._has_special_color = False
-        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(shapeImage, 1, wx.ALIGN_CENTER | wx.ALL, _SHAPE_IMAGE_MARGIN)
+        self.SetSizer(sizer)        
+                
+        tooltip_text = _s['VertexDepth'] + str(shape.hierarchy_depth()+1)
+        tooltip_text += u'\n' + _s['SubtreeCount'] + str(shape.count_descendants()) 
+        tooltip_text += u'\n' + _s['SubtreeHeight'] + str(shape.hierarchy_height())
+        if self.shapes_panel.data.blits:
+            tooltip_text += u'\n' + _s['BlitCount'] + str(shape.blit_count)
         tooltip = wx.ToolTip(tooltip_text) 
-        
-        self.SetSizer(sizer)
+        self.SetToolTip(tooltip)
+        shapeImage.SetToolTip(tooltip)
+        self._image = shapeImage
         if not self.shapes_panel.labelling:
             self.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
             shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
-        self.SetToolTip(tooltip)
-        shapeImage.SetToolTip(tooltip)
-        
         if self.shapes_panel.labelling:
             self.Bind(wx.EVT_LEFT_DOWN, self.OnPopup)
             shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnPopup)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
         shapeImage.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
-        self.cut_regenerate = False
-        
+        self._cut_regenerate = False    
+        self._has_special_colour = False
+
+    def Dispose(self):
+        #self.SetToolTip(None)
+        #self._image.SetToolTip(None)
+        self.Hide()
+
     def OnChooseThisShape(self, event):
         self.shapes_panel.data.current_shape = self.shape
         if self.shapes_panel.target_panel is not None: 
@@ -79,17 +92,17 @@ class _ShapePanel(wx.Panel):
         self.highlight_cut_head()
         self.shapes_panel.highlight_cut_descendants(self.shape)
         menu = wx.Menu()
-        item = menu.Append(id = wx.ID_ANY, text = "Wytnij kształt z hierarchii")
+        item = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOut'])
         self.Bind(wx.EVT_MENU, self.OnCutOut, item)
-        item = menu.Append(id = wx.ID_ANY, text = "Odetnij poddrzewo od hierarchii")
+        item = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOff'])
         self.Bind(wx.EVT_MENU, self.OnCutOff, item)
         self.PopupMenu(menu)
         menu.Destroy()
-        if self.cut_regenerate:
+        if self._cut_regenerate:
             for callback in self.shapes_panel.callbacks:
                 callback.regenerate()
             self.shapes_panel.regenerate()
-            self.cut_regenerate = False
+            self._cut_regenerate = False
         else: # restore cut_highlighted_panels
             for panel, color in self.shapes_panel.cut_highlighted_panels:
                 if color is None:
@@ -100,30 +113,12 @@ class _ShapePanel(wx.Panel):
 
     def OnCutOut(self, event):
         self.shapes_panel.data.cut_out(self.shape)
-        self.cut_regenerate = True
+        self._cut_regenerate = True
         
     def OnCutOff(self, event):
         self.shapes_panel.data.cut_off(self.shape)
-        self.cut_regenerate = True
-            
-    def deselect(self):
-        self.SetBackgroundColour(wx.NullColor)
-        self._has_special_color = False
-        #print(str(self.shape) + " has been deselected!")
-        
-        
-    def select(self):
-        if self.shapes_panel.currently_selected_subpanel is not None:
-            self.shapes_panel.currently_selected_subpanel.deselect()
-        self.shapes_panel.currently_selected_subpanel = self
-        for shape_panel in self.shapes_panel.highlighted_panels:
-            shape_panel.deselect()
-        self.shapes_panel.highlighted_panels = []
-        self.SetBackgroundColour('#0000ff')
-        self._has_special_color = True
-        self.shapes_panel.highlight_branch(self.shape)
-        
-        
+        self._cut_regenerate = True
+
     def highlight_cut_head(self):
         if self._has_special_color:
             bg_color = self.GetBackgroundColour()
@@ -131,7 +126,7 @@ class _ShapePanel(wx.Panel):
             bg_color = None
         self.shapes_panel.cut_highlighted_panels.append((self, bg_color))
         self.SetBackgroundColour('#ffff00')
-#        self._has_special_color = True
+        self._has_special_color = True
         
     def highlight_cut_descendant(self):
         if self._has_special_color:
@@ -140,73 +135,84 @@ class _ShapePanel(wx.Panel):
             bg_color = None
         self.shapes_panel.cut_highlighted_panels.append((self, bg_color))
         self.SetBackgroundColour('#ffa500')
- #       self._has_special_color = True
+        self._has_special_color = True
+
+    def deselect(self):
+        self.SetBackgroundColour(wx.NullColor)
+        self._has_special_color = False
+        #print(str(self.shape) + " has been deselected!")
+        
+    def select(self):
+        if self.shapes_panel._currently_selected_subpanel is not None:
+            self.shapes_panel._currently_selected_subpanel.deselect()
+        self.shapes_panel._currently_selected_subpanel = self
+        for shape_panel in self.shapes_panel.highlighted_panels:
+            shape_panel.deselect()
+        self.shapes_panel.highlighted_panels = []
+        self.SetBackgroundColour('#0000ff')
+        self._has_special_color = True
+        self.shapes_panel.highlight_branch(self.shape)
 
     def highlightAncestor(self, ancestor_depth, max_depth):
         self.SetBackgroundColour('#' + grade_color(ancestor_depth, max_depth) + '0000')
         self._has_special_color = True
 
     def highlightDescendant(self, difference, max_depth):
-        #print(str(self.shape.db_id) + " has been highlighted as a descendant!")
+        
         self.SetBackgroundColour('#00' + grade_color(max_depth - difference, max_depth) + '00')
         self._has_special_color = True
 
-class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
+
+class ShapesPanel(wx.Panel):
     def __init__(self, data, target_panel = None, labelling = False, *args, **kwargs):
-        wx.lib.scrolledpanel.ScrolledPanel.__init__(self, *args, **kwargs)
+        wx.Panel.__init__(self, *args, **kwargs)
         self.data = data
         self.target_panel = target_panel
         self.labelling = labelling
-        self.shape_panels = []
-        self.highlighted_panels = []
-        self.cut_highlighted_panels = []
-        self.panel = wx.Panel(self)
-        staticbox = wx.StaticBox(self, label = 'Hierarchia kształtów')
-        sizer = wx.StaticBoxSizer(staticbox, orient = wx.HORIZONTAL)
-        sizer.Add(self.panel, 1, wx.ALL | wx.EXPAND, 1)
-        self.SetSizer(sizer)
+        
         self.callbacks = []
-        self._grid_sizer = None
-        
-    def regenerate(self):
-        self.currently_selected_subpanel = None
-
-        for shape_panel in self.shape_panels:
-            shape_panel.Hide()
-            
         self.shape_panels = []
         self.highlighted_panels = []
         self.cut_highlighted_panels = []
         
+        self.panel = wx.lib.scrolledpanel.ScrolledPanel(self)
+        staticbox = wx.StaticBox(self, label = _s['Title'])
+        sizer = wx.StaticBoxSizer(staticbox, orient = wx.HORIZONTAL)
+        sizer.Add(self.panel, 1, wx.ALL | wx.EXPAND,1)
+        self.SetSizer(sizer)
+        self.panel.SetupScrolling()
+                
+    def regenerate(self):
+        previous_shape_panels = self.shape_panels
+        sizer = wx.GridSizer()
         labelling_panel = None
-
+        
+        self._currently_selected_subpanel = None
+        self.shape_panels = []
+        self.highlighted_panels = []
+        self.cut_highlighted_panels = []
+        
+        
         if self.data.current_hierarchy is not None:
             max_shape_width, max_shape_height = self.data.current_hierarchy.get_hierarchy_size()
-            shape_panel_size = (max_shape_width + 2*shape_image_margin, max_shape_height + 2*shape_image_margin)
+            shape_panel_size = (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN, max_shape_height + 2*_SHAPE_IMAGE_MARGIN)
             panel_width, _ = self.panel.GetSize()
-            columns = panel_width / (max_shape_width + 2*shape_image_margin) 
-            sizer = wx.GridBagSizer()
+            columns = panel_width / (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN) 
+            sizer.SetCols(columns)
             hierarchy = self.data.current_hierarchy.linearise_hierarchy()
-            pos_col, pos_row = (1,1)
-            for i in range(len(hierarchy)):
-                shapepanel = _ShapePanel(parent = self.panel, shapes_panel = self, shape = hierarchy[i], size = shape_panel_size)
-                if self.labelling and self.data.current_shape == hierarchy[i]:
-                    labelling_panel = shapepanel
-                sizer.Add(shapepanel, (pos_row, pos_col))
-                pos_col += 1
-                if pos_col > columns:
-                    pos_col = 1
-                    pos_row += 1 
+            for shape in hierarchy:
+                shapepanel = _ShapePanel(parent = self.panel, shape = shape, shapes_panel = self, size = shape_panel_size)
+                #if self.labelling and self.data.current_shape == shape:
+                #   labelling_panel = shapepanel
+                sizer.Add(shapepanel)
                 self.shape_panels.append(shapepanel)
-
-            self.panel.SetSizer(sizer)
-            self._grid_sizer = sizer
-            if self.labelling:
-                labelling_panel.select()
-            self.SetupScrolling()
-            self.Refresh()
-            self.Update()
-    
+            #if self.labelling:
+            #   labelling_panel.select()
+        self.panel.SetSizer(sizer)
+        self.panel.Layout()
+        for panel in previous_shape_panels:
+            panel.Dispose()
+            
     def highlight_cut_descendants(self, shape):
         for shape_panel in self.shape_panels:
             if shape_panel.shape.isDescendantOf(shape):
@@ -220,5 +226,4 @@ class ShapesPanel(wx.lib.scrolledpanel.ScrolledPanel):
             elif shape_panel.shape.isDescendantOf(shape):
                 shape_panel.highlightDescendant(shape_panel.shape.hierarchy_depth() - shape.hierarchy_depth(), shape.hierarchy_height())
                 self.highlighted_panels.append(shape_panel)
-        self.Refresh()
-        self.Update()
+        
