@@ -42,6 +42,7 @@ from ocrodjvu.djvu2hocr import save_hocr
 from internal.frame import DjVuShapeToolsFrame
 from labeller.utils import page_of_hocr_data
 import sys
+from internal.dialogs import ChooseCutShapeDialog
 
 def i18n(string):
     return _(string)
@@ -74,6 +75,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                 'NextCharToLabel': ['Następny niezaetykietowany kształt \tCtrl+Shift+E',
                                     'Przejdź do następnego niezaetykietowanego kształtu bez zatwierdzania etykiety'],
                 'NextCharToLabelCommit': ['Zatwierdź etykietę 2 \tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
+                'EditHierarchy': ['Edytuj hierarchię kształtów\tCtrl+O', 'Wyświetl okno pozwalające wybrać i usunąć kształt z aktualnej hierarchii'],
                 'KeyboardShortcuts': ['&Skróty klawiaturowe\tF1', 'Lista skrótów klawiaturowych'],
                 'About' : [_('&About'), _('More information about this program')]
                 }
@@ -83,7 +85,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                               'hOCR' : '&hOCR',
                               'File' : '&Plik',
                               'Help' : 'P&omoc',
-                              '' : ''
+                              'Edit' : '&Edytuj'
                             }
         self._app_data = {'AppName': u'Etykieciarka hOCR',
                           'Author' : u'Piotr Sikora',
@@ -99,15 +101,15 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'ChooseDocument', self.OnChooseDocument)
         self._add_menu_item_by_key(menu, 'LoadHOCR', binding = self.OnLoadHOCR)
-        
+        self._add_menu_item_by_key(menu, 'SaveHOCR', self.OnSaveHOCR)        
         
         self._add_menu_item_by_key(menu, 'Quit', binding = self.OnQuit)
         self._append_menu(self.menubar, menu, 'Data')
         self._enable_menu_item('Data', 'LoadHOCR', False)
     
         menu = wx.Menu()
-        self._add_menu_item_by_key(menu, 'SaveHOCR', self.OnSaveHOCR)
-        self._append_menu(self.menubar, menu, 'File')
+        self._add_menu_item_by_key(menu, 'EditHierarchy', binding = self.OnEditHierarchy)
+        self._append_menu(self.menubar, menu, 'Edit')
     
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'NextLine', binding = self.labelling_panel.OnNextLine)
@@ -117,7 +119,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self._add_menu_item_by_key(menu, 'NextCharToLabel', binding = self.OnNextCharToLabel)
         self._add_menu_item_by_key(menu, 'NextCharToLabelCommit', binding = self.OnNextCharToLabelCommit)
         self._add_menu_item_by_key(menu, 'PrevChar', binding = self.OnPrevChar)
-      #  self._add_menu_item_by_key(menu, 'PrevCharCommit', binding = self.OnNextCharCommit)
+        #self._add_menu_item_by_key(menu, 'PrevCharCommit', binding = self.OnNextCharCommit)
         self._add_menu_item_by_key(menu, 'PrevCharToLabel', binding = self.OnPrevCharToLabel)
         #self._add_menu_item_by_key(menu, 'NextCharToLabelCommit', binding = self.OnNextCharToLabelCommit)
         
@@ -162,6 +164,12 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     
     def OnChooseDocument(self, event):
         self.choose_document_for_labelling()
+            
+    def OnEditHierarchy(self, event):
+        dialog = ChooseCutShapeDialog(shapes_panel = self.labelling_panel.shapes,
+                                       title=self._menuitem_strings['EditHierarchy'][0].split('\t')[0], parent = None)
+        dialog.ShowModal()
+        dialog.Destroy()
             
     def choose_document_for_labelling(self):
         if self.choose_document():

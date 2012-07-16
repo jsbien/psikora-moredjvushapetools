@@ -38,8 +38,15 @@ def childrenOf(shapes):
         children.extend(shape.children)
     return children
 
+def enum_to_letter(index, capital = False):
+    if capital:
+        starting_point = ord(u'A') - 1
+    else:
+        starting_point = ord(u'a') - 1
+    return unichr(starting_point + index)
+
 def grade_color(part, full):
-    min_grade = 40
+    min_grade = 100
     max_grade = 255
     color_int = (max_grade - min_grade)*part / full + min_grade
     return hex(color_int)[2:]
@@ -75,7 +82,8 @@ class _ShapePanel(wx.Panel):
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
         shapeImage.Bind(wx.EVT_RIGHT_DOWN, self.OnPopup)
         self._cut_regenerate = False    
-        self._has_special_colour = False
+        self._has_special_color = False
+        self._cut_highlighted = False
 
     def Dispose(self):
         #self.SetToolTip(None)
@@ -89,8 +97,8 @@ class _ShapePanel(wx.Panel):
         self.select()
 
     def OnPopup(self, event):
-        self.highlight_cut_head()
-        self.shapes_panel.highlight_cut_descendants(self.shape)
+        self.highlight_cut()
+        
         menu = wx.Menu()
         item = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOut'])
         self.Bind(wx.EVT_MENU, self.OnCutOut, item)
@@ -98,6 +106,10 @@ class _ShapePanel(wx.Panel):
         self.Bind(wx.EVT_MENU, self.OnCutOff, item)
         self.PopupMenu(menu)
         menu.Destroy()
+        
+        self.cut_cleanup()
+    
+    def cut_cleanup(self):
         if self._cut_regenerate:
             for callback in self.shapes_panel.callbacks:
                 callback.regenerate()
@@ -109,33 +121,45 @@ class _ShapePanel(wx.Panel):
                     panel.deselect()
                 else:
                     panel.SetBackgroundColour(color)
+                panel._cut_highlighted = False
             self.shapes_panel.cut_highlighted_panels = []
 
     def OnCutOut(self, event):
+        self.cut_out()
+    
+    def cut_out(self):
         self.shapes_panel.data.cut_out(self.shape)
         self._cut_regenerate = True
         
     def OnCutOff(self, event):
+        self.cut_off()
+        
+    def cut_off(self):
         self.shapes_panel.data.cut_off(self.shape)
         self._cut_regenerate = True
 
-    def highlight_cut_head(self):
-        if self._has_special_color:
-            bg_color = self.GetBackgroundColour()
-        else:
-            bg_color = None
-        self.shapes_panel.cut_highlighted_panels.append((self, bg_color))
-        self.SetBackgroundColour('#ffff00')
-        self._has_special_color = True
+    def highlight_cut(self):
+        if not self._cut_highlighted:
+            if self._has_special_color:
+                bg_color = self.GetBackgroundColour()
+            else:
+                bg_color = None
+            self.shapes_panel.cut_highlighted_panels.append((self, bg_color))
+            self.SetBackgroundColour('#ffff00')
+            self._has_special_color = True
+            self._cut_highlighted = True
+            self.shapes_panel.highlight_cut_descendants(self.shape)
         
     def highlight_cut_descendant(self):
-        if self._has_special_color:
-            bg_color = self.GetBackgroundColour()
-        else:
-            bg_color = None
-        self.shapes_panel.cut_highlighted_panels.append((self, bg_color))
-        self.SetBackgroundColour('#ffa500')
-        self._has_special_color = True
+        if not self._cut_highlighted:
+            if self._has_special_color:
+                bg_color = self.GetBackgroundColour()
+            else:
+                bg_color = None
+            self.shapes_panel.cut_highlighted_panels.append((self, bg_color))
+            self.SetBackgroundColour('#ffa500')
+            self._has_special_color = True
+            self._cut_highlighted = True
 
     def deselect(self):
         self.SetBackgroundColour(wx.NullColor)
@@ -171,9 +195,11 @@ class ShapesPanel(wx.Panel):
         self.labelling = labelling
         
         self.callbacks = []
+        self.other_panels = []
         self.shape_panels = []
         self.highlighted_panels = []
         self.cut_highlighted_panels = []
+        self._shape_panels_by_enum = {}
         
         self.panel = wx.lib.scrolledpanel.ScrolledPanel(self)
         staticbox = wx.StaticBox(self, label = _s['Title'])
@@ -181,38 +207,91 @@ class ShapesPanel(wx.Panel):
         sizer.Add(self.panel, 1, wx.ALL | wx.EXPAND,1)
         self.SetSizer(sizer)
         self.panel.SetupScrolling()
-                
+       
+    def enumerative_panel(self, index, size, capital = False):
+        enum_panel = wx.Panel(parent = self.panel, size = size)
+        enum_panel.SetMinSize(size)
+        #enum_panel.SetMaxSize(size)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        label = wx.StaticText(parent = enum_panel, label = enum_to_letter(index, capital))
+        undersizer = wx.BoxSizer(wx.HORIZONTAL)
+        undersizer.Add(label, 1 ,wx.ALIGN_CENTER)
+        sizer.Add(undersizer, 1, wx.ALIGN_CENTER)
+        enum_panel.SetSizer(sizer)
+        enum_panel.Layout()
+        self.other_panels.append(enum_panel)
+        return enum_panel
+    
+    def blank_panel(self, size):
+        blank_panel = wx.Panel(parent = self.panel, size = size)
+        #blank_panel.SetMinSize(size)
+        self.other_panels.append(blank_panel)
+        return blank_panel      
+             
     def regenerate(self):
         previous_shape_panels = self.shape_panels
+        oversizer = wx.BoxSizer(wx.VERTICAL)
         sizer = wx.GridSizer()
         labelling_panel = None
         
+        for panel in self.other_panels:
+            panel.Destroy()
+            
         self._currently_selected_subpanel = None
+        self._shape_panels_by_enum = {}
         self.shape_panels = []
+        self.other_panels = []
         self.highlighted_panels = []
         self.cut_highlighted_panels = []
-        
+        self._columns = 0
         
         if self.data.current_hierarchy is not None:
             max_shape_width, max_shape_height = self.data.current_hierarchy.get_hierarchy_size()
             shape_panel_size = (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN, max_shape_height + 2*_SHAPE_IMAGE_MARGIN)
             panel_width, _ = self.panel.GetSize()
-            columns = panel_width / (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN) 
-            sizer.SetCols(columns)
+            columns = panel_width / (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN)
             hierarchy = self.data.current_hierarchy.linearise_hierarchy()
+            sizer.SetCols(columns)
+            sizer.Add(self.blank_panel(shape_panel_size))
+            for i in range(1, min(columns - 1, len(hierarchy)) + 1):
+                sizer.Add(self.enumerative_panel(i, shape_panel_size, True), 0, wx.EXPAND)
+            
+            for i in range(1, sizer.GetCols() - min(columns - 1, len(hierarchy))):
+                sizer.Add(self.blank_panel(shape_panel_size), 0, wx.EXPAND)
+            
+            i = columns
+            row = 1
             for shape in hierarchy:
+                if i == columns:
+                    i = 1
+                    sizer.Add(self.enumerative_panel(row, shape_panel_size))
+                    row += 1
+                i += 1 
                 shapepanel = _ShapePanel(parent = self.panel, shape = shape, shapes_panel = self, size = shape_panel_size)
-                #if self.labelling and self.data.current_shape == shape:
-                #   labelling_panel = shapepanel
-                sizer.Add(shapepanel)
+                if self.labelling and self.data.current_shape == shape:
+                    labelling_panel = shapepanel
+                sizer.Add(shapepanel, 0, wx.EXPAND)
                 self.shape_panels.append(shapepanel)
-            #if self.labelling:
-            #   labelling_panel.select()
-        self.panel.SetSizer(sizer)
+                self._shape_panels_by_enum[(enum_to_letter(row - 1), enum_to_letter(i - 1, True))] = shapepanel
+                
+            if self.labelling:
+                labelling_panel.select()
+        
+        oversizer.Add(sizer)
+        oversizer.AddStretchSpacer()
+        oversizer.Add(wx.StaticText(self.panel, label = ''))
+        self.panel.SetSizer(oversizer)
         self.panel.Layout()
+        self.panel.SetupScrolling()
         for panel in previous_shape_panels:
             panel.Dispose()
-            
+     
+    def get_viable_coordinates(self):
+        return self._shape_panels_by_enum.keys()
+    
+    def get_shape_at(self, coords):
+        return self._shape_panels_by_enum.get(coords)
+               
     def highlight_cut_descendants(self, shape):
         for shape_panel in self.shape_panels:
             if shape_panel.shape.isDescendantOf(shape):
