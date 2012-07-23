@@ -23,7 +23,7 @@ from datatypes import *
 
 class DatabaseManipulator:
     
-    def __init__(self, db_name, db_host, db_user, db_pass, labelling = True):
+    def __init__(self, db_name, db_host, db_user, db_pass):
         self.db_name = db_name
         self.db_host = db_host
         self.db_user = db_user
@@ -35,8 +35,7 @@ class DatabaseManipulator:
             self.cursor.execute('SET NAMES utf8;')
             self.cursor.execute('SET CHARACTER SET utf8;')
             self.cursor.execute('SET character_set_connection=utf8;') 
-            if labelling:
-                self.prepare_database_for_labelling()
+            self.prepare_database_for_labelling()
     
     def close(self):  
         print("Closing connection!")      
@@ -96,6 +95,7 @@ class DatabaseManipulator:
         return unicode_chars, uchars_by_id
     
     def fetch_labels_raw_data(self, document_id):
+
         self.cursor.execute("SELECT * FROM labels WHERE document_id = %s", (document_id))
         data = self.cursor.fetchall()
         return data
@@ -131,9 +131,21 @@ class DatabaseManipulator:
         self.cursor.execute("INSERT INTO `labels`(`font`, `font_size`, `font_type`, `textel_type`, `document_id`, `user`, `date`) VALUES(%s, %s, %s, %s, %s, %s, now())", values)
         return self.cursor.lastrowid
 
+    def update_label(self, label, user_id, document_id):
+        values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id, label.db_id)
+        query = "UPDATE labels SET " \
+                "font = %s, font_size = %s, font_type = %s, textel_type = %s, " \
+                "document_id = %s, user = %s, date = now() " \
+                "WHERE id = %s"
+        self.cursor.execute(query, values)
+        
     def insert_uchar(self, character, character_name):
         self.cursor.execute("INSERT INTO `unicode_chars`(`uchar`, `char_name`) VALUES(%s, %s)", (character, character_name))
         return self.cursor.lastrowid
+
+    def update_shape_noise(self, shape_id, noise):
+        query = "UPDATE shapes SET noise = %s WHERE id = %s"
+        self.cursor.execute(query, (shape_id, noise))
 
     def shape_edit(self, shape_id, prev_parent_id, new_parent_id, user_id):
         query = "UPDATE shapes SET parent_id = " + str(new_parent_id) + " WHERE id = " + str(shape_id)
@@ -157,11 +169,11 @@ class DatabaseManipulator:
                             ")"
             self.cursor.execute(create_command)
     
-    def _prepare_table_key(self, table, field):
+    def _prepare_table_key(self, table, field, properties = "INT not null"):
         command = "SHOW COLUMNS FROM " + table + " LIKE '" + field + "'"
         self.cursor.execute(command)
         if self.cursor.fetchone() is None:
-            command = "ALTER TABLE " + table +" ADD " + field + " INT not null;"
+            command = "ALTER TABLE " + table +" ADD " + field + " " + properties + ";"
             self.cursor.execute(command)
     
     def prepare_database_for_labelling(self):
@@ -224,3 +236,5 @@ class DatabaseManipulator:
         self._prepare_simple_table("fonts", "font")
         self._prepare_simple_table("font_sizes", "font_size")
         self._prepare_simple_table("font_types", "font_type")
+        self._prepare_table_key("shapes", "noise", 
+                                "BOOLEAN COMMENT 'If true this shape is not text, but a smear or other graphical noise.'")

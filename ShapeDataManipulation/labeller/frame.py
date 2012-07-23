@@ -20,22 +20,22 @@
 import wx
 import wx.lib.ogl
 import wx.lib.newevent
-import wx.lib.scrolledpanel
 
 
 from hocr_data import DatahOCR
 from labeller.context import ContextPanel
 from labeller.labelling import LabellingPanel
-from internal.shapes_panel import ShapesPanel
+
 import shelve
 import os.path
 
-import djvusmooth.models.text
-from djvusmooth.gui.page import PageWidget, PercentZoom, OneToOneZoom, StretchZoom, FitWidthZoom, FitPageZoom
+from djvusmooth.gui.page import PercentZoom, OneToOneZoom, StretchZoom, FitWidthZoom, FitPageZoom
 
 from djvusmooth.i18n import _
+def i18n(string):
+    return _(string)
+
 import djvu.decode
-import djvu.const
 
 from ocrodjvu.djvu2hocr import save_hocr
 
@@ -43,9 +43,6 @@ from internal.frame import DjVuShapeToolsFrame
 from labeller.utils import page_of_hocr_data
 import sys
 from internal.dialogs import ChooseCutShapeDialog
-
-def i18n(string):
-    return _(string)
 
 class hOCRLabeller(DjVuShapeToolsFrame):
     
@@ -61,42 +58,8 @@ class hOCRLabeller(DjVuShapeToolsFrame):
 
         self.context_panel = ContextPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
         self.labelling_panel = LabellingPanel(parent = self, data = self.data, data_hocr = self.data_hocr)
+        self.shapes_panel = self.labelling_panel.shapes
 
-        self._menuitem_strings = { 'ChooseDocument': [u'Wybierz &Dokument', u'Wyświetla okno wyboru dokumentu z bazy'],
-                'LoadHOCR': [u'Otwórz pliki z &hOCR', u'Wyświetla okno wybór plików zawierających dane hOCR'],
-                'SaveHOCR': [u'Zapisz pliki z &hOCR', u'Zapisuje zmiany w hOCR do plików'],
-                'Quit': [u'&Wyjście', u'Wyjdź z programu'],
-                'NextLine': [u'Następny wiersz \tCtrl+Alt+N', u'Przejdź do następnego wiersza'],
-                'PrevLine': [u'Poprzedni wiersz \tCtrl+Alt+P', u'Przejdź do poprzedniego wiersza'],
-                'NextChar': [u'Następny kształt \tCtrl+Shift+N', u'Przejdź do następnego kształtu bez zatwierdzenia etykiety'],
-                'PrevChar': [u'Poprzedni kształt \tCtrl+P', u'Przejdź do poprzedniego kształtu bez zatwierdzenia etykiety'],
-                'PrevCharToLabel': ['Poprzedni niezaetykietowany kształt \tCtrl+W', u'Przejdź do poprzedniego niezaetykietowanego kształtu bez zatwierdzenia etykiety'],
-                'NextCharCommit': ['Zatwierdź etykietę \tCtrl+N', u'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
-                'NextCharToLabel': ['Następny niezaetykietowany kształt \tCtrl+Shift+E',
-                                    'Przejdź do następnego niezaetykietowanego kształtu bez zatwierdzania etykiety'],
-                'NextCharToLabelCommit': ['Zatwierdź etykietę 2 \tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
-                'EditHierarchy': ['Edytuj hierarchię kształtów\tCtrl+O', 'Wyświetl okno pozwalające wybrać i usunąć kształt z aktualnej hierarchii'],
-                'KeyboardShortcuts': ['&Skróty klawiaturowe\tF1', 'Lista skrótów klawiaturowych'],
-                'About' : [_('&About'), _('More information about this program')]
-                }
-        self._menu_strings = { 'Data' : '&Dane',
-                              #'View' : _('&View'),
-                              'View' : '&Widok',
-                              'hOCR' : '&hOCR',
-                              'File' : '&Plik',
-                              'Help' : 'P&omoc',
-                              'Edit' : '&Edytuj'
-                            }
-        self._app_data = {'AppName': u'Etykieciarka hOCR',
-                          'Author' : u'Piotr Sikora',
-                          'License' : u'GPL-3',
-                          'Website' : u'https://bitbucket.org/piotr_sikora/moredjvushapetools/',
-                          'Notes': u'The ideas behind this application were developed by Janusz S. Bień.\n' \
-                                    'The work has been supported by the Ministry of Science and Higher Education\'s ' \
-                                    'grant no. N N519 384036 (cf. https://bitbucket.org/jsbien/ndt).'
-                          }
-        
-        
         # menu - database
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'ChooseDocument', self.OnChooseDocument)
@@ -153,8 +116,6 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.Centre()
         self.Show(True)
     
-
-    
     def OnLabellerExit(self, event):
         if self.labelling_panel.dirty_hocr:
             print("Saving hOCR files...")
@@ -164,12 +125,6 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     
     def OnChooseDocument(self, event):
         self.choose_document_for_labelling()
-            
-    def OnEditHierarchy(self, event):
-        dialog = ChooseCutShapeDialog(shapes_panel = self.labelling_panel.shapes,
-                                       title=self._menuitem_strings['EditHierarchy'][0].split('\t')[0], parent = None)
-        dialog.ShowModal()
-        dialog.Destroy()
             
     def choose_document_for_labelling(self):
         if self.choose_document():
@@ -268,7 +223,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
             self.context_panel.update_page_widget(new_document = True, new_page = True)
             self.labelling_panel.regenerate()
             return True
-        except djvu.decode.JobFailed as exc:
+        except djvu.decode.JobFailed:
             print("Opening djvu file failed: "+ str(sys.exc_info()))
             self.data_hocr.text_model = None
             self.data_hocr.document = None

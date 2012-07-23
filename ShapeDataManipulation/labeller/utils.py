@@ -36,11 +36,18 @@ def page_of_hocr_data(path, filename, document_name):
                 return (page_no, None)
     return None
 
-def unicode_code(character):
-    return ord(character)
+def unicode_codestr(characters):
+    codestrs = []
+    for char in characters:
+        codestrs.append(str(ord(char)))
+    return ', '.join(codestrs)
+        
+def unicode_names(characters):
+    names = []
+    for char in characters:
+        names.append(unicodedata.name(unicode(char)))
+    return ', '.join(names)
 
-def unicode_name(character):
-    return unicodedata.name(character)
     
 class Rect:
     #a rectangle on the map. used to characterize a room.

@@ -21,6 +21,7 @@ import wx
 from internal.database_manipulation import DatabaseManipulator
 from internal.dialogs import *
 from internal.data import ShapeData
+import internal.strings as strings
 
 def i18n(string):
     return string
@@ -61,10 +62,15 @@ class DjVuShapeToolsFrame(wx.Frame):
         self.toolbar = self.CreateToolBar()
         self.statusbar = self.CreateStatusBar()
         self.new_document = False
+        
         self._menu_items = {}
         self._menus = {}
-        self._app_data = {}
         
+        self._menuitem_strings = strings.menuitems
+        self._menu_strings = strings.menu
+        self._app_data = strings.app_data
+        self._app_data['AppName']=  self.GetTitle()
+         
     def on_about(self, event):
         message = self._app_data.get('AppName', '') + ' ' + self._app_data.get('AppVersion','') + '\n'
         message += i18n('Author') + ': ' + self._app_data.get('Author','') + '\n'
@@ -111,6 +117,18 @@ class DjVuShapeToolsFrame(wx.Frame):
 
     def OnChooseDictionary(self, event):
         self.choose_dictionary()
+
+    def OnEditHierarchy(self, event):
+        if self.data.current_hierarchy is not None: 
+            if self.data.current_hierarchy.children:
+                dialog = ChooseCutShapeDialog(shapes_panel = self.shapes_panel,
+                                       title=self._menuitem_strings['EditHierarchy'][0].split('\t')[0], parent = None)
+                dialog.ShowModal()
+                dialog.Destroy()
+            else:
+                dlg = wx.MessageDialog(self, "Hierarchia składająca się z 1 kształtu nie może być edytowana.", "Uwaga!", wx.OK | wx.ICON_WARNING)
+                dlg.ShowModal()
+                dlg.Destroy()
         
     def choose_dictionary(self):
         dialog = ChooseDictionaryDialog(data = self.data, parent = None, title='Wybierz słownik kształtów z bazy')
@@ -120,6 +138,7 @@ class DjVuShapeToolsFrame(wx.Frame):
             self.data.fill_shape_dictionary(
                         self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id)
                         )
+            self.data.load_labels(only_current_dictionary = True)
         self.roots_panel.regenerate()
 
     def OnQuit(self, event):

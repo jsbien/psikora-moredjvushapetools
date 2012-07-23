@@ -65,7 +65,7 @@ class BoundingBox:
 class Shape:
     
     def __init__(self, shape_data):
-        db_id, original_id, parent_id, bits, width, height, dict_id, bbox_top, bbox_left, bbox_right, bbox_bottom = shape_data
+        db_id, original_id, parent_id, bits, width, height, dict_id, bbox_top, bbox_left, bbox_right, bbox_bottom, noise = shape_data
         self.db_id = db_id
         self.id = original_id
         self.parent_db_id = parent_id
@@ -78,6 +78,7 @@ class Shape:
         self.bounding_box = BoundingBox(bbox_top,bbox_left,bbox_right,bbox_bottom)
         self._image = None
         self.label = None
+        self.noise = noise
         
         self.blit_count = 0
         self.hierarchy_count = None
@@ -175,17 +176,18 @@ class Shape:
 
 class Label:
     
-    def __init__(self, font_id, font, font_type_id, font_type, font_size_id, font_size, textel_type, textel_id = None, textel = None):
+    def __init__(self, font_id, font, font_type_id, font_type, font_size_id, font_size, textel_type, textel_ids = None, textel = None):
         self.font_id = font_id 
         self.font = font
         self.font_type_id = font_type_id
         self.font_type = font_type
         self.font_size_id = font_size_id
         self.font_size = font_size              
-        self.textel_id = textel_id
+        self.textel_ids = textel_ids
         self.textel = textel
         self.textel_type = textel_type
-    
+        self.db_id = None
+        
 class UnicodeChar:
     
     def __init__(self, db_id, character, name):

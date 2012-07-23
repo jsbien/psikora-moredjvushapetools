@@ -195,7 +195,7 @@ class ShapeData:
             blit.shape = shape
         self.blits[page_no] = blits
         
-    def load_labels(self):
+    def load_labels(self, only_current_dictionary = False):
         labels_to_uchars = self.db_manipulator.fetch_junction_table("label_chars")
         
         raw_label_data = self.db_manipulator.fetch_labels_raw_data(self.current_document.db_id)
@@ -204,12 +204,12 @@ class ShapeData:
             font = self.fonts[font_id]
             font_type = self.font_types[font_type_id]
             font_size = self.font_sizes[font_size_id]
-            uchar_id = labels_to_uchars[db_id][0]
-            unicode_character = self.uchars_by_id[uchar_id]
+            uchar_ids = labels_to_uchars[db_id]
+            unicode_characters = [self.uchars_by_id[uchar_id] for uchar_id in uchar_ids]
             label = Label(font_id = font_id, font = font,
                       font_type_id = font_type_id, font_type = font_type,
                       font_size_id = font_size_id, font_size = font_size,              
-                      textel_id = uchar_id, textel = unicode_character, 
+                      textel_ids = uchar_ids, textel = ''.join([uchar.character for uchar in unicode_characters]), 
                       textel_type = textel_type
                       )
             label.db_id = db_id
@@ -219,4 +219,9 @@ class ShapeData:
         for label in labels.values():
             shape_ids = labels_to_shapes.get(label.db_id, [])
             for shape_id in shape_ids:
-                self.shapes[shape_id].label = label 
+                shape = self.shapes.get(shape_id, None)
+                if shape is not None: 
+                    shape.label = label 
+                else:
+                    if not only_current_dictionary:
+                        print("Shape missing for label: " + str(label.db_id)) #TODO: put some real error handling here

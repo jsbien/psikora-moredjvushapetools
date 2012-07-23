@@ -91,19 +91,24 @@ class _ShapePanel(wx.Panel):
         self.Hide()
 
     def OnChooseThisShape(self, event):
+        if self.shapes_panel.target_panel is not None:
+            self.shapes_panel.target_panel.save_changes()
         self.shapes_panel.data.current_shape = self.shape
-        if self.shapes_panel.target_panel is not None: 
+        if self.shapes_panel.target_panel is not None:
             self.shapes_panel.target_panel.regenerate()
         self.select()
 
     def OnPopup(self, event):
         self.highlight_cut()
-        
         menu = wx.Menu()
-        item = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOut'])
-        self.Bind(wx.EVT_MENU, self.OnCutOut, item)
-        item = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOff'])
-        self.Bind(wx.EVT_MENU, self.OnCutOff, item)
+        cutoutitem = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOut'])
+        cutoffitem = menu.Append(id = wx.ID_ANY, text = _s['CutShapeOff'])
+        if self.shapes_panel.data.current_hierarchy.children:
+            self.Bind(wx.EVT_MENU, self.OnCutOut, cutoutitem)
+            self.Bind(wx.EVT_MENU, self.OnCutOff, cutoffitem)
+        else:
+            menu.Enable(cutoutitem.GetId(), False)
+            menu.Enable(cutoffitem.GetId(), False)
         self.PopupMenu(menu)
         menu.Destroy()
         
@@ -274,7 +279,7 @@ class ShapesPanel(wx.Panel):
                 self.shape_panels.append(shapepanel)
                 self._shape_panels_by_enum[(enum_to_letter(row - 1), enum_to_letter(i - 1, True))] = shapepanel
                 
-            if self.labelling:
+            if self.labelling and labelling_panel is not None:
                 labelling_panel.select()
         
         oversizer.Add(sizer)

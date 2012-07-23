@@ -21,7 +21,8 @@ import wx
 from internal.image_conversion import PilImageToWxBitmap
 from internal.datatypes import Label
 
-from labeller.utils import unicode_code, unicode_name
+from labeller.utils import unicode_codestr, unicode_names
+from wx._core import EVT_CHECKBOX
 
 _font_traits = ['font', 'font_type', 'font_size']
 _combo_traits = _font_traits + ['textel_type']
@@ -29,6 +30,7 @@ _combo_traits = _font_traits + ['textel_type']
 _strings = {'title' : 'Dane kształtu',
             'db_id' : "Numer w słowniku kształtów:",
             'size'  : "Szerokość x Wysokość:",
+            'noise' : 'Szum',
             'textel' : "Tekstel:", 
             'textel_code' : "Kod tekstela: " ,
             'textel_name' : "Nazwa tekstela: " , 
@@ -64,8 +66,10 @@ class LabelPanel(wx.Panel):
         self.SetSizer(sizer)
         self._dirty = False
         self._last_values = None
+        self._items = {}
         
     def layout_item(self, sizer, label_key, item):
+        self._items[label_key] = item
         linesizer = wx.BoxSizer(wx.HORIZONTAL)
         infolabel = wx.StaticText(self.inner_panel, wx.ID_ANY, _s(label_key))
         linesizer.Add(infolabel, 0, wx.LEFT, 5)
@@ -77,17 +81,24 @@ class LabelPanel(wx.Panel):
     def label(self, value):
         return wx.StaticText(self.inner_panel, wx.ID_ANY, value)
     
-    def combo(self, values, readonly = False):
+    def combobox(self, values, readonly = False):
         cb_style = wx.CB_DROPDOWN | wx.CB_SORT
         if readonly:
             cb_style = cb_style | wx.CB_READONLY
         return wx.ComboBox(self.inner_panel, choices = values, style = cb_style)
 
+    def textctrl(self, value):
+        textctrl = wx.TextCtrl(self.inner_panel)
+        print(str(value))
+        textctrl.ChangeValue(value)
+        return textctrl
+
     def regenerate(self, unicode_chars = None):
-        
+        self._dirty = False
         self._comboboxes = {}
         self.inner_panel.DestroyChildren()
         sizer = wx.BoxSizer(wx.VERTICAL)
+        self._items = {}
         
         if self.data.current_shape is not None:
             shape = self.data.current_shape
@@ -103,14 +114,26 @@ class LabelPanel(wx.Panel):
             self.layout_item(sizer, 'size', self.label(str(shape.width) + " x " + str(shape.height)))
             sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             if self.labelling:
-                for char in unicode_chars:
-                    self.layout_item(sizer, 'textel', self.label(char))
-                    self.layout_item(sizer, 'textel_code', self.label(str(unicode_code(char))))
-                    self.layout_item(sizer, 'textel_name', self.label(unicode_name(char)))
-                self._comboboxes['textel_type'] = self.layout_item(sizer, 'textel_type', self.combo(self.data.textel_types, readonly = True))
-                self._comboboxes['font_type'] = self.layout_item(sizer, 'font_type', self.combo(self.data.font_types.values()))
-                self._comboboxes['font'] = self.layout_item(sizer, 'font', self.combo(self.data.fonts.values()))
-                self._comboboxes['font_size'] = self.layout_item(sizer, 'font_size', self.combo(self.data.font_sizes.values()))
+                noise_check = self.layout_item(sizer, 'noise', wx.CheckBox(self.inner_panel))
+                noise_check.Bind(wx.EVT_CHECKBOX, self.OnNoiseToggle)
+                if unicode_chars is None:
+                    if shape.label is not None:
+                        textel = str(shape.label)
+                    else:
+                        textel = ''
+                    textelCtrl = self.layout_item(sizer, 'textel', self.textctrl(textel))
+                    textelCtrl.Bind(wx.EVT_TEXT, self.OnTextelChange)
+                    self.layout_item(sizer, 'textel_code', self.label(unicode_codestr(textel)))
+                    self.layout_item(sizer, 'textel_name', self.label(unicode_names(textel)))
+                else:
+                    for char in unicode_chars:
+                        self.layout_item(sizer, 'textel', self.label(char))
+                        self.layout_item(sizer, 'textel_code', self.label(unicode_codestr(char)))
+                        self.layout_item(sizer, 'textel_name', self.label(unicode_names(char)))
+                self._comboboxes['textel_type'] = self.layout_item(sizer, 'textel_type', self.combobox(self.data.textel_types, readonly = True))
+                self._comboboxes['font_type'] = self.layout_item(sizer, 'font_type', self.combobox(self.data.font_types.values()))
+                self._comboboxes['font'] = self.layout_item(sizer, 'font', self.combobox(self.data.fonts.values()))
+                self._comboboxes['font_size'] = self.layout_item(sizer, 'font_size', self.combobox(self.data.font_sizes.values()))
                 if shape.label is None:
                     self._dirty = True
                     if self._last_values is None:
@@ -143,6 +166,10 @@ class LabelPanel(wx.Panel):
                     self.layout_item(sizer, 'font', self.label(str(shape.label.fonts)))
                     self.layout_item(sizer, 'font_size', self.label(str(shape.label.font_sizes)))
             sizer.AddStretchSpacer()
+            if shape.noise:
+                dirty = self._dirty
+                noise_check.SetValue(True)
+                self._dirty = dirty
             #sizer.Add(wx.StaticLine(parent = self.inner_panel), 0, wx.ALIGN_CENTER | wx.ALL | wx.EXPAND, 5)
             if not self.labelling:
                 # self.layout_item(sizer, 'doc_name', self.label(str(self.data.current_document.name)))
@@ -150,6 +177,7 @@ class LabelPanel(wx.Panel):
                 self.layout_item(sizer, 'dict_name', self.label(str(self.data.current_dictionary.name)))
                 self.layout_item(sizer, 'hierarchy_count', self.label(str(len(self.data.shape_hierarchies))))
                 self.layout_item(sizer, 'dict_shape_count', self.label(str(len(self.data.shapes))))
+            
     
         self.inner_panel.SetSizer(sizer, True)
         self.inner_panel.Fit()
@@ -157,6 +185,21 @@ class LabelPanel(wx.Panel):
         self.inner_panel.Refresh()
         self.inner_panel.Update()
 
+    def OnNoiseToggle(self, event):
+        checkbox = self._items['noise']
+        show = not checkbox.GetValue()
+        self._dirty = True
+        for item in self._items.values():
+            if item != checkbox:
+                item.Show(show)
+
+    def OnTextelChange(self, event):
+        textel = event.GetString()
+        self._dirty = True
+        self._items['textel_code'].SetLabel(unicode_codestr(textel))
+        self._items['textel_name'].SetLabel(unicode_names(textel))
+        self.inner_panel.Layout()
+        
     def _save_font_trait(self, font_trait, data_dict):
         #font_trait_value =  u"%s" % self._comboboxes[font_trait].GetValue()
         font_trait_value =  self._comboboxes[font_trait].GetValue()
@@ -172,35 +215,50 @@ class LabelPanel(wx.Panel):
         self._last_values[font_trait] = font_trait_value
         return (db_id, font_trait_value)
         
+    def save_changes(self):
+        if 'textel' in self._items:
+            characters = self._items['textel'].GetValue()
+            self.save_label(characters)
 
     def save_label(self, unicode_characters):
         if self._dirty:
+            print("Saving changes" + str(unicode_characters))
             self._dirty = False
-            font_id, font = self._save_font_trait('font', self.data.fonts)
-            font_type_id, font_type = self._save_font_trait('font_type', self.data.font_types)
-            font_size_id, font_size = self._save_font_trait('font_size', self.data.font_sizes)
-            #save unicode characters
-            uchar_ids = []
-            for unicode_character in unicode_characters:
-                uchar_ids.append(self.data.uchar_id(unicode_character, unicode_name(unicode_character)))
-            textel_type = self._comboboxes['textel_type'].GetValue()
-            self._last_values['textel_type'] = textel_type
-            #save a label
-            label = Label(font_id = font_id, font = font,
+            shape = self.data.current_shape
+            # check if noise
+            if self._items['noise'].GetValue():
+                self.data.db_manipulator.update_shape_noise(shape.db_id, True)
+            else:
+                self.data.db_manipulator.update_shape_noise(shape.db_id, False)
+                
+                font_id, font = self._save_font_trait('font', self.data.fonts)
+                font_type_id, font_type = self._save_font_trait('font_type', self.data.font_types)
+                font_size_id, font_size = self._save_font_trait('font_size', self.data.font_sizes)
+                #save unicode characters
+                uchar_ids = []
+                for unicode_character in unicode_characters:
+                    uchar_ids.append(self.data.uchar_id(unicode_character, unicode_names(unicode_character)))
+                textel_type = self._comboboxes['textel_type'].GetValue()
+                self._last_values['textel_type'] = textel_type
+                #save a label
+                label = Label(font_id = font_id, font = font,
                       font_type_id = font_type_id, font_type = font_type,
                       font_size_id = font_size_id, font_size = font_size,
-                      #textel_id = uchar_id, textel = unicode_character, 
+                      textel_ids = uchar_ids, textel = unicode_characters, 
                       textel_type = textel_type
                       )
-            self.data.current_shape.label = label
-            label.db_id = self.data.db_manipulator.insert_label(label, self.data.user_id(self.data.db_manipulator.db_user), self.data.current_document.db_id)
+                if shape.label:
+                    self.data.db_manipulator.update_label(label, self.data.user_id(self.data.db_manipulator.db_user), self.data.current_document.db_id)
+                else:
+                    label.db_id = self.data.db_manipulator.insert_label(label, self.data.user_id(self.data.db_manipulator.db_user), self.data.current_document.db_id)
+                shape.label = label
+                #save a link between label and uchars
+                for uchar_id in uchar_ids:
+                    self.data.db_manipulator.insert_into_junction(table = "label_chars", fields = ("uchar_id","label_id"), values = (uchar_id, label.db_id))
         
-            #save a link between label and uchars
-            for uchar_id in uchar_ids:
-                self.data.db_manipulator.insert_into_junction(table = "label_chars", fields = ("uchar_id","label_id"), values = (uchar_id, label.db_id))
-        
-            #label the hierarchy of shapes
-            for shape in self.data.current_hierarchy.linearise_hierarchy():
-                self.data.db_manipulator.insert_into_junction(table = "labelled_shapes", fields = ("shape_id", "label_id"), values = (shape.db_id, label.db_id))
+                #label the hierarchy of shapes
+                for shape in self.data.current_hierarchy.linearise_hierarchy():
+                    self.data.db_manipulator.insert_into_junction(table = "labelled_shapes", fields = ("shape_id", "label_id"), values = (shape.db_id, label.db_id))
+                    shape.label = label
 
                     

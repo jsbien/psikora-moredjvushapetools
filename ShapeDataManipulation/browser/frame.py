@@ -23,6 +23,7 @@ from internal.shapes_panel import ShapesPanel
 from browser.roots_panel import RootsPanel
 from internal.label_panel import LabelPanel
 
+
 class ShapeBrowser(DjVuShapeToolsFrame):
     
     def __init__(self, *args, **kwargs):
@@ -38,26 +39,21 @@ class ShapeBrowser(DjVuShapeToolsFrame):
         self._add_menu_item(menu, 'Sortowanie wg &liczebności', 'Sortuje korzenie hierarchii kształtów wg liczebności hierarchii' , binding = self.SortRootsCount)
         self.menubar.Append(menu, '&Hierarchie')
         self.SetSize((1024, 768))
-        
-        self._app_data = {'AppName': u'Przeglądarka kształtów DjVu',
-                          'Author' : u'Piotr Sikora',
-                          'License' : u'GPL-3',
-                          'Website' : u'https://bitbucket.org/piotr_sikora/moredjvushapetools/',
-                          'Notes': u'The ideas behind this application were developed by Janusz S. Bień.\n' \
-                                    'The work has been supported by the Ministry of Science and Higher Education\'s ' \
-                                    'grant no. N N519 384036 (cf. https://bitbucket.org/jsbien/ndt).'
-                          }
-        
-        self.label_panel = LabelPanel(parent = self, data = self.data)
-        self.shapes = ShapesPanel(data = self.data, target_panel = self.label_panel, parent = self)
-        self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panel = self.shapes)
-        self.shapes.callbacks.append(self.roots_panel)
+
+        menu = wx.Menu()
+        self._add_menu_item_by_key(menu, 'EditHierarchy', binding = self.OnEditHierarchy)
+        self._append_menu(self.menubar, menu, 'Edit')
+
+        self.label_panel = LabelPanel(parent = self, data = self.data, labelling = True)
+        self.shapes_panel = ShapesPanel(data = self.data, target_panel = self.label_panel, parent = self)
+        self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panel = self.shapes_panel)
+        self.shapes_panel.callbacks.append(self.roots_panel)
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         
         innerSizer = wx.BoxSizer(wx.VERTICAL)
         
         innerSizer.Add(self.roots_panel,1, wx.EXPAND | wx.ALL, 5)
-        innerSizer.Add(self.shapes,5, wx.EXPAND | wx.ALL, 5)
+        innerSizer.Add(self.shapes_panel,5, wx.EXPAND | wx.ALL, 5)
         
         mainSizer.Add(innerSizer, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.AddSpacer((5,5))
@@ -83,7 +79,7 @@ class ShapeBrowser(DjVuShapeToolsFrame):
         self.choose_document()
         if self.new_document:
             self.label_panel.regenerate()
-            self.shapes.regenerate()
+            self.shapes_panel.regenerate()
             self.roots_panel.regenerate()
             self.new_document = False
     
@@ -94,17 +90,5 @@ class ShapeBrowser(DjVuShapeToolsFrame):
         pass
     
     def load_last_session(self):
-        #TODO: temporary test
-        """
-        self.data.current_document = self.data.documents[0]
-        self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
-        self.data.current_dictionary = self.data.shape_dictionaries[0]
-        self.data.fill_shape_dictionary(self.db_manipulator.fetch_shapes(self.data.current_dictionary.db_id))
-        self.data.current_hierarchy = self.data.shape_hierarchies[0]
-        self.data.current_shape = self.data.shape_hierarchies[0]
-        self.roots_panel.regenerate()
-        self.shapes.regenerate()
-        self.label_panel.regenerate()
-        """
         if self.choose_document():
             self.choose_dictionary()  
