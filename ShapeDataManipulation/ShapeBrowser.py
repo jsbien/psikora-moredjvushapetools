@@ -38,7 +38,7 @@ if __name__ == '__main__':
     db_host = args.db_host
     
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = ShapeBrowser(parent = None, title = u'Przeglądarka kształtów DjVu')
+    frame = ShapeBrowser(parent = None, title = u'Przeglądarko-etykieciarka kształtów DjVu')
     frame.connect_to_database(db_name, db_host, db_user, db_pass)
     frame.load_last_session()
     app.MainLoop()

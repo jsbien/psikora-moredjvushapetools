@@ -91,8 +91,6 @@ class _ShapePanel(wx.Panel):
         self.Hide()
 
     def OnChooseThisShape(self, event):
-        if self.shapes_panel.target_panel is not None:
-            self.shapes_panel.target_panel.save_changes()
         self.shapes_panel.data.current_shape = self.shape
         if self.shapes_panel.target_panel is not None:
             self.shapes_panel.target_panel.regenerate()
@@ -169,7 +167,6 @@ class _ShapePanel(wx.Panel):
     def deselect(self):
         self.SetBackgroundColour(wx.NullColor)
         self._has_special_color = False
-        #print(str(self.shape) + " has been deselected!")
         
     def select(self):
         if self.shapes_panel._currently_selected_subpanel is not None:
@@ -237,7 +234,7 @@ class ShapesPanel(wx.Panel):
         previous_shape_panels = self.shape_panels
         oversizer = wx.BoxSizer(wx.VERTICAL)
         sizer = wx.GridSizer()
-        labelling_panel = None
+        preselected_panel = None
         
         for panel in self.other_panels:
             panel.Destroy()
@@ -273,14 +270,15 @@ class ShapesPanel(wx.Panel):
                     row += 1
                 i += 1 
                 shapepanel = _ShapePanel(parent = self.panel, shape = shape, shapes_panel = self, size = shape_panel_size)
-                if self.labelling and self.data.current_shape == shape:
-                    labelling_panel = shapepanel
+                if self.data.current_shape == shape:
+                    preselected_panel = shapepanel
+                
                 sizer.Add(shapepanel, 0, wx.EXPAND)
                 self.shape_panels.append(shapepanel)
                 self._shape_panels_by_enum[(enum_to_letter(row - 1), enum_to_letter(i - 1, True))] = shapepanel
                 
-            if self.labelling and labelling_panel is not None:
-                labelling_panel.select()
+            if preselected_panel is not None:
+                preselected_panel.select()
         
         oversizer.Add(sizer)
         oversizer.AddStretchSpacer()

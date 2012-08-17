@@ -55,5 +55,6 @@ menuitems = { 'ChooseDocument': [u'Wybierz &Dokument', u'Wyświetla okno wyboru 
                 'NextCharToLabelCommit': ['Zatwierdź etykietę 2 \tCtrl+E', 'Przejdź do następnego kształtu, zatwierdzając etykietę dla obecnego'],
                 'EditHierarchy': ['Edytuj hierarchię kształtów\tCtrl+O', 'Wyświetl okno pozwalające wybrać i usunąć kształt z aktualnej hierarchii'],
                 'KeyboardShortcuts': ['&Skróty klawiaturowe\tF1', 'Lista skrótów klawiaturowych'],
-                'About' : [_('&About'), _('More information about this program')]
+                'About' : [_('&About'), _('More information about this program')],
+                'ApproveLabel' : ['Zatwierdź etykietę\tCtrl+E' , 'Zatwierdź etykietę hierarchii kształtów, zapisując ją w bazie danych']
                 }

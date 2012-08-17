@@ -196,21 +196,21 @@ class ShapeData:
         self.blits[page_no] = blits
         
     def load_labels(self, only_current_dictionary = False):
-        labels_to_uchars = self.db_manipulator.fetch_junction_table("label_chars")
+        labels_to_uchars = self.db_manipulator.fetch_junction_table(table = "label_chars", selection = "label_id, uchar_id")
         
         raw_label_data = self.db_manipulator.fetch_labels_raw_data(self.current_document.db_id)
         labels = {}
-        for db_id, font_id, font_size_id, font_type_id, textel_type, _, _, _ in raw_label_data: #user and date ignored
-            font = self.fonts[font_id]
-            font_type = self.font_types[font_type_id]
-            font_size = self.font_sizes[font_size_id]
-            uchar_ids = labels_to_uchars[db_id]
+        for db_id, font_id, font_size_id, font_type_id, textel_type, _, _, _, noise in raw_label_data: #document id is known, user and date ignored
+            font = self.fonts.get(font_id, None)
+            font_type = self.font_types.get(font_type_id, None)
+            font_size = self.font_sizes.get(font_size_id, None)
+            uchar_ids = labels_to_uchars.get(db_id, [])
             unicode_characters = [self.uchars_by_id[uchar_id] for uchar_id in uchar_ids]
             label = Label(font_id = font_id, font = font,
                       font_type_id = font_type_id, font_type = font_type,
                       font_size_id = font_size_id, font_size = font_size,              
                       textel_ids = uchar_ids, textel = ''.join([uchar.character for uchar in unicode_characters]), 
-                      textel_type = textel_type
+                      textel_type = textel_type, noise = noise
                       )
             label.db_id = db_id
             labels[db_id] = label

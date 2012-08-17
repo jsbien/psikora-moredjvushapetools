@@ -59,17 +59,19 @@ class RootPanel(wx.Panel):
     def select(self):
         self.SetBackgroundColour('#00ff00')
         self.parent.data.current_hierarchy = self.shape
+        self.parent.data.current_shape = self.shape
         if self.parent.currently_selected_subpanel is not None:
             self.parent.currently_selected_subpanel.deselect()
         self.parent.currently_selected_subpanel = self 
-        self.parent.target_panel.regenerate()
-
+        for panel in self.parent.target_panels:
+            panel.regenerate()
+        
 class RootsPanel(wx.lib.scrolledpanel.ScrolledPanel):
     
-    def __init__(self, data, target_panel, sorting_method, *args, **kwargs):
+    def __init__(self, data, target_panels, sorting_method, *args, **kwargs):
         wx.lib.scrolledpanel.ScrolledPanel.__init__(self, *args, **kwargs)
         self.data = data
-        self.target_panel = target_panel
+        self.target_panels = target_panels
         self.sorting_method = sorting_method
         self.root_panels = []
         self.prepare_for_new_layout()

@@ -42,22 +42,27 @@ class ShapeBrowser(DjVuShapeToolsFrame):
 
         menu = wx.Menu()
         self._add_menu_item_by_key(menu, 'EditHierarchy', binding = self.OnEditHierarchy)
+        self._add_menu_item_by_key(menu, 'ApproveLabel', binding = self.OnApproveLabel)
         self._append_menu(self.menubar, menu, 'Edit')
 
-        self.label_panel = LabelPanel(parent = self, data = self.data, labelling = True)
-        self.shapes_panel = ShapesPanel(data = self.data, target_panel = self.label_panel, parent = self)
-        self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panel = self.shapes_panel)
+        self.label_panel = LabelPanel(parent = self, data = self.data, labelling = True, hierarchy_mode = True)
+        self.shape_preview_panel = LabelPanel(parent = self, data = self.data, labelling = False, hierarchy_mode = False)
+        self.shapes_panel = ShapesPanel(data = self.data, target_panel = self.shape_preview_panel, parent = self)
+        self.roots_panel = RootsPanel(parent = self, sorting_method = "count", data = self.data, target_panels = [self.shapes_panel, self.label_panel, self.shape_preview_panel])
         self.shapes_panel.callbacks.append(self.roots_panel)
         mainSizer = wx.BoxSizer(wx.HORIZONTAL)
         
-        innerSizer = wx.BoxSizer(wx.VERTICAL)
-        
-        innerSizer.Add(self.roots_panel,1, wx.EXPAND | wx.ALL, 5)
-        innerSizer.Add(self.shapes_panel,5, wx.EXPAND | wx.ALL, 5)
-        
-        mainSizer.Add(innerSizer, 1, wx.EXPAND | wx.ALL, 5)
+        leftSizer = wx.BoxSizer(wx.VERTICAL)
+        leftSizer.Add(self.roots_panel,1, wx.EXPAND | wx.ALL, 5)
+        leftSizer.Add(self.shapes_panel, 4, wx.EXPAND | wx.ALL, 5)
+
+        rightSizer = wx.BoxSizer(wx.VERTICAL)
+        rightSizer.Add(self.shape_preview_panel, 3, wx.EXPAND)
+        rightSizer.Add(self.label_panel, 7, wx.EXPAND)
+
+        mainSizer.Add(leftSizer, 1, wx.EXPAND | wx.ALL, 5)
         mainSizer.AddSpacer((5,5))
-        mainSizer.Add(self.label_panel, 1, wx.EXPAND | wx.ALL, 5)
+        mainSizer.Add(rightSizer, 1, wx.EXPAND | wx.ALL, 5)
         
         self.SetSizer(mainSizer)
         
@@ -82,6 +87,9 @@ class ShapeBrowser(DjVuShapeToolsFrame):
             self.shapes_panel.regenerate()
             self.roots_panel.regenerate()
             self.new_document = False
+    
+    def OnApproveLabel(self, event):
+        self.label_panel.save_changes()
     
     def save_session(self):
         pass

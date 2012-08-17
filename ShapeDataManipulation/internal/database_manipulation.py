@@ -37,6 +37,9 @@ class DatabaseManipulator:
             self.cursor.execute('SET character_set_connection=utf8;') 
             self.prepare_database_for_labelling()
     
+    def commit(self):
+        self.connection.commit()
+    
     def close(self):  
         print("Closing connection!")      
         self.connection.close()
@@ -100,8 +103,14 @@ class DatabaseManipulator:
         data = self.cursor.fetchall()
         return data
     
-    def fetch_junction_table(self, table):
-        self.cursor.execute("SELECT * FROM " + table)
+    def fetch(self, fields, table):
+        query = "SELECT `" + "`, `".join(fields) + "` FROM " + table
+        self.cursor.execute(query)
+        data = self.cursor.fetchall()
+        return data
+        
+    def fetch_junction_table(self, table, selection = "*"):
+        self.cursor.execute("SELECT " + selection + "  FROM " + table)
         data = self.cursor.fetchall()
         junction_dictionary = {}
         for id_1, id_2 in data:
@@ -124,29 +133,33 @@ class DatabaseManipulator:
         return self.cursor.lastrowid
 
     def insert_into_junction(self, table, fields, values):
-        self.cursor.execute("INSERT INTO `" + table + "`(`" + fields[0] + "`, `" + fields[1] + "`) VALUES(%s, %s)", values)
+        placeholders = ['%s'] * len(fields)
+        self.cursor.execute("INSERT INTO `" + table + "`(`" + "`, `".join(fields) + "`) VALUES(" + ', '.join(placeholders) + ")", values)
     
     def insert_label(self, label, user_id, document_id):
-        values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id)
-        self.cursor.execute("INSERT INTO `labels`(`font`, `font_size`, `font_type`, `textel_type`, `document_id`, `user`, `date`) VALUES(%s, %s, %s, %s, %s, %s, now())", values)
+        values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id, label.noise)
+        self.cursor.execute("INSERT INTO `labels`(`font`, `font_size`, `font_type`, `textel_type`, `document_id`, `user`, `date`, `noise`) VALUES(%s, %s, %s, %s, %s, %s, now(), %s)", values)
         return self.cursor.lastrowid
 
     def update_label(self, label, user_id, document_id):
-        values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id, label.db_id)
+        values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id, label.noise, label.db_id)
         query = "UPDATE labels SET " \
                 "font = %s, font_size = %s, font_type = %s, textel_type = %s, " \
-                "document_id = %s, user = %s, date = now() " \
+                "document_id = %s, user = %s, date = now(), noise = %s " \
                 "WHERE id = %s"
         self.cursor.execute(query, values)
         
     def insert_uchar(self, character, character_name):
         self.cursor.execute("INSERT INTO `unicode_chars`(`uchar`, `char_name`) VALUES(%s, %s)", (character, character_name))
         return self.cursor.lastrowid
-
-    def update_shape_noise(self, shape_id, noise):
+    
+    """
+    Update labels.
+    def update_shape_noise(self, label_id, noise):
         query = "UPDATE shapes SET noise = %s WHERE id = %s"
         self.cursor.execute(query, (shape_id, noise))
-
+    """
+    
     def shape_edit(self, shape_id, prev_parent_id, new_parent_id, user_id):
         query = "UPDATE shapes SET parent_id = " + str(new_parent_id) + " WHERE id = " + str(shape_id)
         self.cursor.execute(query)
@@ -176,6 +189,10 @@ class DatabaseManipulator:
             command = "ALTER TABLE " + table +" ADD " + field + " " + properties + ";"
             self.cursor.execute(command)
     
+    def _alter_table_field(self, table, field, properties):
+        command = "ALTER TABLE " + table + " MODIFY " + field + ' ' + properties
+        self.cursor.execute(command)
+    
     def prepare_database_for_labelling(self):
         self.cursor.execute("SHOW TABLES LIKE 'labels'")
         if self.cursor.fetchone() is None:
@@ -196,7 +213,7 @@ class DatabaseManipulator:
             if self.cursor.fetchone()[1] == 'varchar(60)':
                 self.reset_database_for_labelling()
                 print(str("Labelling tables reset for new structure."))
-            self._prepare_table_key("labels", "font_type")
+
             #self._prepare_table_key("labels", "font_typeface")
         self.cursor.execute("SHOW TABLES LIKE 'labelled_shapes'")
         if self.cursor.fetchone() is None:
@@ -236,5 +253,11 @@ class DatabaseManipulator:
         self._prepare_simple_table("fonts", "font")
         self._prepare_simple_table("font_sizes", "font_size")
         self._prepare_simple_table("font_types", "font_type")
-        self._prepare_table_key("shapes", "noise", 
+        self._prepare_table_key("labels", "font_type")        
+        self._prepare_table_key("labels", "noise", 
                                 "BOOLEAN COMMENT 'If true this shape is not text, but a smear or other graphical noise.'")
+        self._prepare_table_key("label_chars", "sequence", "INT not null COMMENT 'Denotes the sequence of characters in a label.'")
+        self._alter_table_field('labels', 'font', 'INT null')
+        self._alter_table_field('labels', 'font_size', 'INT null')
+        self._alter_table_field('labels', 'font_type', 'INT null')
+        self._alter_table_field('labels', 'textel_type', "ENUM('mikrotekstel', 'tekstel właściwy', 'makrotekstel') null")

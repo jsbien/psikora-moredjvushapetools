@@ -129,7 +129,6 @@ class DatahOCR:
         return page_no + self.page_no_mod
     
     def _page_no_mod(self):
-        #print(str(self._page_no_mod))
         if self._page_no_mod is None:
             if self.page_range[0] > 0 and self.page_range[1] == len(self.document.pages):
                 self._page_no_mod = -1
