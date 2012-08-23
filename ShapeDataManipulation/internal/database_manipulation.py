@@ -136,6 +136,10 @@ class DatabaseManipulator:
         placeholders = ['%s'] * len(fields)
         self.cursor.execute("INSERT INTO `" + table + "`(`" + "`, `".join(fields) + "`) VALUES(" + ', '.join(placeholders) + ")", values)
     
+    def update_junction(self, table, updated_field, other_field, new_value, previous_value, other_value):
+        query = "UPDATE " + table + " SET " + updated_field + " = %s WHERE " + updated_field + " = %s AND " + other_field + " = %s"
+        self.cursor.execute(query, (new_value, previous_value, other_value))
+    
     def insert_label(self, label, user_id, document_id):
         values = (label.font_id, label.font_size_id, label.font_type_id, label.textel_type, document_id, user_id, label.noise)
         self.cursor.execute("INSERT INTO `labels`(`font`, `font_size`, `font_type`, `textel_type`, `document_id`, `user`, `date`, `noise`) VALUES(%s, %s, %s, %s, %s, %s, now(), %s)", values)

@@ -216,7 +216,8 @@ class ChooseCutShapeDialog(wx.Dialog):
         if final_text in self._viable_coords:
             self.OnChoice(final_text)
         else:
-            self.coords_input.ChangeValue(self._default_coords)
+            if len(final_text) < len(self._default_coords):
+                self.coords_input.ChangeValue(self._default_coords)
             if self._shape_panel is not None:
                 self._shape_panel.cut_cleanup()
             self.cutoffButton.Disable()

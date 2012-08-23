@@ -161,15 +161,20 @@ class LabelPanel(wx.Panel):
             self._items['approve label'].Enable(False)
         elif self.dirty:
             self._infolabels['approve label'].SetForegroundColour('#0000FF')
-            self._infolabels['approve label'].SetLabel('Etykieta zmodyfikowana.')
+            self._infolabels['approve label'].SetLabel('Nowa etykieta nie jest zapisana.')
             self._items['approve label'].Enable()
         else:
             self._infolabels['approve label'].SetLabel('')
             self._items['approve label'].Enable(False)
         if self.data.current_hierarchy is not None and self.data.current_hierarchy.label is not None:
-            self._infolabels['approve label'].SetForegroundColour('#00FF00')
-            self._infolabels['approve label'].SetLabel('Hierarchia jest zaetykietowana.')
-            self._items['approve label'].Enable(False)
+            if self.dirty:
+                self._infolabels['approve label'].SetForegroundColour('#0000FF')
+                self._infolabels['approve label'].SetLabel('Etykieta zmodyfikowana.')
+                self._items['approve label'].Enable(True)
+            else:
+                self._infolabels['approve label'].SetForegroundColour('#00FF00')
+                self._infolabels['approve label'].SetLabel('Hierarchia jest zaetykietowana.')
+                self._items['approve label'].Enable(False)
             self.hide_message('no label')
 
             
@@ -239,9 +244,8 @@ class LabelPanel(wx.Panel):
                     self._comboboxes['font_size'].SetStringSelection(shape.label.font_size)
                     self._comboboxes['font_type'].SetStringSelection(shape.label.font_type)
                 if shape.label is not None and shape.label.noise:
-                    dirty = self.dirty
                     noise_check.SetValue(True)
-                    self.dirty = dirty
+                    self.dirty = False
                 self._textel_is_important()
             else:
                 """
