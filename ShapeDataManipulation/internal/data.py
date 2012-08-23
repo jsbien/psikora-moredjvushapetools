@@ -200,9 +200,9 @@ class ShapeData:
                 for sequence in range(len(cloned_label.textel_ids)):
                     self.db_manipulator.insert_into_junction(table = "label_chars", fields = ("sequence", "uchar_id","label_id"), values = (sequence, cloned_label.textel_ids[sequence], cloned_label.db_id))
                 #label the hierarchy of shapes
-                for descendant in shape.linearise_hierarchy():
-                    self.db_manipulator.update_junction(table = "labelled_shapes", updated_field = "label_id", other_field = "shape_id", new_value = cloned_label.db_id, previous_value = label.db_id, other_value = shape.db_id)
-                    descendant.label = cloned_label
+                for sh in shape.linearise_hierarchy():
+                    self.db_manipulator.update_junction(table = "labelled_shapes", updated_field = "label_id", other_field = "shape_id", new_value = cloned_label.db_id, previous_value = label.db_id, other_value = sh.db_id)
+                    sh.label = cloned_label
             self.db_manipulator.commit()
 
     def add_blits(self, blits, page_no):
