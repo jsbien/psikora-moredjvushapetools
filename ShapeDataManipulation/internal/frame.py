@@ -70,6 +70,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         self._menu_strings = strings.menu
         self._app_data = strings.app_data
         self._app_data['AppName']=  self.GetTitle()
+        self._temporary_status = ''
          
     def on_about(self, event):
         message = self._app_data.get('AppName', '') + ' ' + self._app_data.get('AppVersion','') + '\n'
@@ -114,6 +115,16 @@ class DjVuShapeToolsFrame(wx.Frame):
             self.new_document = True
         return self.data.current_document is not None
         #TODO: use Observers to observe when document changes (or at least check for change here)
+
+    def temporary_status(self, text):
+        status = self.statusbar.GetStatusText()
+        print('Status', status, str(len(status)))
+        print("Temp", self._temporary_status, str(len(self._temporary_status)))
+        status = status[ : len(status) - len(self._temporary_status)]
+        self._temporary_status = text
+        print("Text", text, str(len(text)))
+        self.statusbar.SetStatusText(status + text)
+        print('New Status', self.statusbar.GetStatusText(), str(len(self.statusbar.GetStatusText())))
 
     def OnChooseDictionary(self, event):
         self.choose_dictionary()

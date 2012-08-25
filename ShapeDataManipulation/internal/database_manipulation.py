@@ -136,6 +136,12 @@ class DatabaseManipulator:
         placeholders = ['%s'] * len(fields)
         self.cursor.execute("INSERT INTO `" + table + "`(`" + "`, `".join(fields) + "`) VALUES(" + ', '.join(placeholders) + ")", values)
     
+    def remove_from_junction(self, table, fields, values):
+        constraints = []
+        for field in fields:
+            constraints.append(field + " = %s")
+        self.cursor.execute("DELETE FROM " + table + " WHERE " + " AND ".join(constraints), values)
+    
     def update_junction(self, table, updated_field, other_field, new_value, previous_value, other_value):
         query = "UPDATE " + table + " SET " + updated_field + " = %s WHERE " + updated_field + " = %s AND " + other_field + " = %s"
         self.cursor.execute(query, (new_value, previous_value, other_value))

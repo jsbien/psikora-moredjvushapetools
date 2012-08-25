@@ -171,13 +171,16 @@ class ShapeData:
                 parent.children.append(child)
             else:
                 self.shape_hierarchies.append(child)
+                if shape.label is not None:
+                    #clone label for a new hierarchy
+                    self._clone_label_for_shapes(shape.label, child.linearise_hierarchy()) 
             self.db_manipulator.shape_edit(shape_id = child.db_id,
                                            prev_parent_id = shape.db_id,
                                            new_parent_id = parent_id,
                                            user_id = self.user_id(self.db_manipulator.db_user))
         shape.children = []
         self.db_manipulator.commit()
-    
+        
     def cut_off(self, shape):
         if shape.parent is not None:
             shape.parent.children.remove(shape)
@@ -187,23 +190,25 @@ class ShapeData:
             self.shape_hierarchies.append(shape)
             self.db_manipulator.shape_edit(shape_id = shape.db_id, prev_parent_id = parent_db_id, new_parent_id = -1, user_id = self.user_id(self.db_manipulator.db_user))
             if shape.label is not None:
-                label = shape.label
-                #clone the label
-                cloned_label = Label(font_id = label.font_id, font = label.font,
+                self._clone_label_for_shapes(shape.label, shape.linearise_hierarchy())
+            self.db_manipulator.commit()
+
+    def _clone_label_for_shapes(self, label, shapes):
+        #clone the label
+        cloned_label = Label(font_id = label.font_id, font = label.font,
                       font_type_id = label.font_type_id, font_type = label.font_type,
                       font_size_id = label.font_size_id, font_size = label.font_size,
                       textel_ids = label.textel_ids, textel = label.textel, 
                       textel_type = label.textel_type, noise = label.noise 
                       )
-                cloned_label.db_id = self.db_manipulator.insert_label(cloned_label, self.user_id(self.db_manipulator.db_user), self.current_document.db_id)
-                #save a link between label and uchars
-                for sequence in range(len(cloned_label.textel_ids)):
-                    self.db_manipulator.insert_into_junction(table = "label_chars", fields = ("sequence", "uchar_id","label_id"), values = (sequence, cloned_label.textel_ids[sequence], cloned_label.db_id))
-                #label the hierarchy of shapes
-                for sh in shape.linearise_hierarchy():
-                    self.db_manipulator.update_junction(table = "labelled_shapes", updated_field = "label_id", other_field = "shape_id", new_value = cloned_label.db_id, previous_value = label.db_id, other_value = sh.db_id)
-                    sh.label = cloned_label
-            self.db_manipulator.commit()
+        cloned_label.db_id = self.db_manipulator.insert_label(cloned_label, self.user_id(self.db_manipulator.db_user), self.current_document.db_id)
+        #save a link between label and uchars
+        for sequence in range(len(cloned_label.textel_ids)):
+            self.db_manipulator.insert_into_junction(table = "label_chars", fields = ("sequence", "uchar_id","label_id"), values = (sequence, cloned_label.textel_ids[sequence], cloned_label.db_id))
+        #label the hierarchy of shapes
+        for sh in shapes:
+            self.db_manipulator.update_junction(table = "labelled_shapes", updated_field = "label_id", other_field = "shape_id", new_value = cloned_label.db_id, previous_value = label.db_id, other_value = sh.db_id)
+            sh.label = cloned_label
 
     def add_blits(self, blits, page_no):
         for blit in blits:

@@ -79,9 +79,7 @@ class Shape:
         self._image = None
         self.label = None
         
-        
         self.blit_count = 0
-        self.hierarchy_count = None
         self.hierarchy_max_size = None
 
     def has_no_parent(self):
@@ -107,13 +105,14 @@ class Shape:
         return Image.fromstring("1", self.size, imagebits, "raw", "1;I", 0, 1)
     
     def count_descendants(self):
-        if self.hierarchy_count is None:
-            count = 1 #count self
-            for child in self.children:
-                count += child.count_descendants()
-            count += len(self.children)
-            self.hierarchy_count = count 
         return self.hierarchy_count - 1
+
+    def _get_hierarchy_count(self):
+        count = 1 #count self
+        for child in self.children:
+            count += child.hierarchy_count
+        return count
+    hierarchy_count = property(_get_hierarchy_count)
 
     def get_hierarchy_size(self):
         if self.hierarchy_max_size is None:

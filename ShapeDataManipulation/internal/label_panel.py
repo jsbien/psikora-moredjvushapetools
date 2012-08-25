@@ -75,7 +75,7 @@ class LabelPanel(wx.Panel):
         sizer.Add(self.inner_panel, 1, wx.ALL | wx.EXPAND, 5)
         self.SetSizer(sizer)
         self._dirty = False
-        self._last_values = None
+        self._last_values = {}  
         self._items = {}
         self.hierarchy_mode = hierarchy_mode
         self._messages = {}
@@ -106,7 +106,6 @@ class LabelPanel(wx.Panel):
         return textctrl
 
     def init_last_values(self):
-        self._last_values = {}  
         if self.data.fonts:
             self._last_values['font'] = self.data.fonts.values()[0]
         if self.data.font_types:
@@ -232,7 +231,7 @@ class LabelPanel(wx.Panel):
                 self._print_messages(sizer)
                 if shape.label is None or shape.label.noise:
                     self.dirty = True
-                    if self._last_values is None:
+                    if not self._last_values:
                         self.init_last_values()
                     for combo_trait in _combo_traits:
                         if combo_trait in self._last_values:
@@ -357,15 +356,25 @@ class LabelPanel(wx.Panel):
             if label.noise is None:
                 raise ValueError
             if self.data.current_hierarchy.label is not None:
+                label.db_id = self.data.current_hierarchy.label.db_id 
                 self.data.db_manipulator.update_label(label, self.data.user_id(self.data.db_manipulator.db_user), self.data.current_document.db_id)
+                #remove previous links between label and uchars
+                label_id = self.data.current_hierarchy.label.db_id
+                for uchar_id in self.data.current_hierarchy.label.textel_ids:
+                    self.data.db_manipulator.remove_from_junction(table = "label_chars", fields = ("uchar_id", "label_id"), values = (uchar_id, label_id))
             else:
                 label.db_id = self.data.db_manipulator.insert_label(label, self.data.user_id(self.data.db_manipulator.db_user), self.data.current_document.db_id)
+                #add entries linking shapes in the hierarchy with a new label
+                for shape in self.data.current_hierarchy.linearise_hierarchy():
+                    self.data.db_manipulator.insert_into_junction(table = "labelled_shapes", fields = ("shape_id", "label_id"), values = (shape.db_id, label.db_id))
+            #label the hierarchy of shapes
+            for shape in self.data.current_hierarchy.linearise_hierarchy():
+                shape.label = label
+
             #save a link between label and uchars
             for sequence in range(len(uchar_ids)):
                 self.data.db_manipulator.insert_into_junction(table = "label_chars", fields = ("sequence", "uchar_id","label_id"), values = (sequence, uchar_ids[sequence], label.db_id))
-            #label the hierarchy of shapes
-            for shape in self.data.current_hierarchy.linearise_hierarchy():
-                self.data.db_manipulator.insert_into_junction(table = "labelled_shapes", fields = ("shape_id", "label_id"), values = (shape.db_id, label.db_id))
-                shape.label = label
+                
+                
             self.data.db_manipulator.commit()
             self.dirty = False

@@ -44,7 +44,11 @@ class ShapeBrowser(DjVuShapeToolsFrame):
         self._add_menu_item_by_key(menu, 'EditHierarchy', binding = self.OnEditHierarchy)
         self._add_menu_item_by_key(menu, 'ApproveLabel', binding = self.OnApproveLabel)
         self._append_menu(self.menubar, menu, 'Edit')
-
+        menu = wx.Menu()
+        self._add_menu_item_by_key(menu, 'KeyboardShortcuts', binding = self.on_shortcuts)
+        self._add_menu_item_by_key(menu, 'About', binding = self.on_about, id=wx.ID_ABOUT)
+        self._append_menu(self.menubar, menu, 'Help')
+        
         self.label_panel = LabelPanel(parent = self, data = self.data, labelling = True, hierarchy_mode = True)
         self.shape_preview_panel = LabelPanel(parent = self, data = self.data, labelling = False, hierarchy_mode = False)
         self.shapes_panel = ShapesPanel(data = self.data, target_panel = self.shape_preview_panel, parent = self)

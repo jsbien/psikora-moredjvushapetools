@@ -131,6 +131,12 @@ class _ShapePanel(wx.Panel):
         self.cut_out()
     
     def cut_out(self):
+        feedback = 'Nowe hierarchie: '
+        if self.shape.parent is None:
+            feedback += unicode(str(len(self.shape.children)))
+        else:
+            feedback += u"1."
+        self.shapes_panel.GetParent().temporary_status(u"Wycięto 1 kształt. " + feedback)
         self.shapes_panel.data.cut_out(self.shape)
         self._cut_regenerate = True
         
@@ -138,6 +144,7 @@ class _ShapePanel(wx.Panel):
         self.cut_off()
         
     def cut_off(self):
+        self.shapes_panel.GetParent().temporary_status(u"Odcięto kształtów: " + unicode(str(len(self.shape.linearise_hierarchy()))) + u'.')
         self.shapes_panel.data.cut_off(self.shape)
         self._cut_regenerate = True
 
