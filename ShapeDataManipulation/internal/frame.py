@@ -85,7 +85,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         for menustring, help_text in self._menuitem_strings.values():
             find_shortcut = menustring.split('\t')
             if len(find_shortcut) == 2:
-                msg += find_shortcut[1] + " : - " + help_text + '\n'
+                msg += unicode(find_shortcut[1]) + u" : • " + unicode(help_text) + u'\n'
         wx.MessageBox(message=msg, caption=u'Skróty klawiaturowe')
         
         
