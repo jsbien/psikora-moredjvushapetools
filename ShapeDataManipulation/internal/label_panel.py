@@ -150,8 +150,8 @@ class LabelPanel(wx.Panel):
     def _change_feedback_labels(self):
         if not self.labelling:
             return
-        if 'textel' in self._items: 
-            textel_len = len(self._items['textel'].GetValue())
+        if 'textel' in self._items:
+            textel_len = len(self._items['textel'].GetValue()) if self._textel_ctrl else len(self._items['textel'].GetLabel())
         else:
             textel_len = 0
         if textel_len == 0 and not self._items['noise'].GetValue():
@@ -187,7 +187,7 @@ class LabelPanel(wx.Panel):
         self._items = {}
         self._infolabels = {}
         if self.data.current_hierarchy is not None:
-            shape = self.data.current_hierarchy
+            shape = self.data.current_shape
             if not self.hierarchy_mode:
                 imagepanel = wx.Panel(self.inner_panel)
                 imagesizer = wx.BoxSizer(wx.VERTICAL)
@@ -203,6 +203,7 @@ class LabelPanel(wx.Panel):
                 self.layout_item(sizer, 'hierarchy_count', self.label(str(len(self.data.shape_hierarchies))))
                 self.layout_item(sizer, 'dict_shape_count', self.label(str(len(self.data.shapes))))
             if self.labelling:
+                shape = self.data.current_hierarchy
                 noise_check = self.layout_item(sizer, 'noise', wx.CheckBox(self.inner_panel))
                 noise_check.Bind(wx.EVT_CHECKBOX, self.OnNoiseToggle)
                 if unicode_chars is None:
@@ -214,11 +215,12 @@ class LabelPanel(wx.Panel):
                     textelCtrl.Bind(wx.EVT_TEXT, self.OnTextelChange)
                     self.layout_item(sizer, 'textel_code', self.label(unicode_codestr(textel)))
                     self.layout_item(sizer, 'textel_name', self.label(unicode_names(textel)))
+                    self._textel_ctrl = True
                 else:
-                    for char in unicode_chars:
-                        self.layout_item(sizer, 'textel', self.label(char))
-                        self.layout_item(sizer, 'textel_code', self.label(unicode_codestr(char)))
-                        self.layout_item(sizer, 'textel_name', self.label(unicode_names(char)))
+                    self.layout_item(sizer, 'textel', self.label(unicode_chars))
+                    self.layout_item(sizer, 'textel_code', self.label(unicode_codestr(unicode_chars)))
+                    self.layout_item(sizer, 'textel_name', self.label(unicode_names(unicode_chars)))
+                    self._textel_ctrl = False
                 self._comboboxes['textel_type'] = self.layout_item(sizer, 'textel_type', self.combobox(self.data.textel_types, readonly = True))
                 self._comboboxes['font_type'] = self.layout_item(sizer, 'font_type', self.combobox(self.data.font_types.values()))
                 self._comboboxes['font'] = self.layout_item(sizer, 'font', self.combobox(self.data.fonts.values()))
@@ -227,7 +229,10 @@ class LabelPanel(wx.Panel):
                     combobox.Bind(wx.EVT_TEXT, self.OnComboEdit)
                     combobox.Bind(wx.EVT_COMBOBOX, self.OnComboEdit)
                 button = self.layout_item(sizer, 'approve label', wx.Button(self.inner_panel, label = _s('approve label')))
-                button.Bind(wx.EVT_BUTTON, self.OnSaveChanges)
+                if self.hierarchy_mode:
+                    button.Bind(wx.EVT_BUTTON, self.OnSaveChanges)
+                else:
+                    button.Hide()
                 self._print_messages(sizer)
                 if shape.label is None or shape.label.noise:
                     self.dirty = True
@@ -245,7 +250,8 @@ class LabelPanel(wx.Panel):
                 if shape.label is not None and shape.label.noise:
                     noise_check.SetValue(True)
                     self.dirty = False
-                self._textel_is_important()
+                if self.hierarchy_mode:
+                    self._textel_is_important()
             else:
                 """
                 if shape.label is None:
@@ -274,7 +280,7 @@ class LabelPanel(wx.Panel):
             if key not in ['noise','db_id','size', 'approve label']:
                 self._infolabels[key].Show(show)
                 self._items[key].Show(show)
-        if show:
+        if show and self.hierarchy_mode:
             self._textel_is_important()
 
     def OnTextelChange(self, event):
