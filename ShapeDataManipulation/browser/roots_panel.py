@@ -21,6 +21,8 @@
 import wx
 import wx.lib.scrolledpanel
 from internal.image_conversion import PilImageToWxBitmap
+from internal.frame import __SCRIPT_PATH__
+import os
 
 class RootPanel(wx.Panel):
     def __init__(self, shape, main_widget, *args, **kwargs):
@@ -102,9 +104,12 @@ class RootsPanel(wx.Panel):
                           'prevscr': u'Przewiń hierarchie tak, by ostatnią widoczną była poprzednia przed obecnie wyświetlanymi.',
                           'home': u'Pokaż pierwszą hierarchię.'}
         for button_name in ['next', 'nextscr', 'end', 'prev', 'prevscr', 'home']:
-            image = wx.Image('resource/' + button_name + '.png', wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+            
+            image_path = os.path.join(__SCRIPT_PATH__, "resource", button_name + '.png')            
+            image = wx.Image(image_path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
             self.buttons[button_name] = wx.BitmapButton(self, bitmap = image,
                              size = (image.GetWidth()+10, image.GetHeight()))
+
             tooltip = wx.ToolTip(self._button_tooltips[button_name])
             self.buttons[button_name].SetToolTip(tooltip)
             self.buttons[button_name].Bind(wx.EVT_BUTTON, self._bindings[button_name])

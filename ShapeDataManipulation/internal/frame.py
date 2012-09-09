@@ -22,6 +22,9 @@ from internal.database_manipulation import DatabaseManipulator
 from internal.dialogs import *
 from internal.data import ShapeData
 import internal.strings as strings
+import os, sys
+
+__SCRIPT_PATH__ = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 def i18n(string):
     return string
