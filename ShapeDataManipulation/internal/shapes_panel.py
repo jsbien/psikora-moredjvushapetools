@@ -40,9 +40,9 @@ def childrenOf(shapes):
 
 def enum_to_letter(index, capital = False):
     if capital:
-        starting_point = ord(u'A') - 1
-    else:
         starting_point = ord(u'a') - 1
+    else:
+        starting_point = ord(u'A') - 1
     return unichr(starting_point + index)
 
 def grade_color(part, full):
@@ -115,7 +115,7 @@ class _ShapePanel(wx.Panel):
     def cut_cleanup(self):
         if self._cut_regenerate:
             for callback in self.shapes_panel.callbacks:
-                callback.regenerate()
+                callback.regenerate(self.shapes_panel.data.current_hierarchy)
             self.shapes_panel.regenerate()
             self._cut_regenerate = False
         else: # restore cut_highlighted_panels
@@ -236,6 +236,13 @@ class ShapesPanel(wx.Panel):
         #blank_panel.SetMinSize(size)
         self.other_panels.append(blank_panel)
         return blank_panel      
+
+    def enumerative_panel_line(self, sizer, panel_size, max_enumeration):
+        sizer.Add(self.blank_panel(panel_size))
+        for i in range(1, max_enumeration + 1):
+            sizer.Add(self.enumerative_panel(i, panel_size, True), 0, wx.EXPAND)
+        for _ in range(1, sizer.GetCols() - max_enumeration):
+            sizer.Add(self.blank_panel(panel_size), 0, wx.EXPAND)
              
     def regenerate(self):
         previous_shape_panels = self.shape_panels
@@ -257,29 +264,26 @@ class ShapesPanel(wx.Panel):
         if self.data.current_hierarchy is not None:
             max_shape_width, max_shape_height = self.data.current_hierarchy.get_hierarchy_size()
             shape_panel_size = (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN, max_shape_height + 2*_SHAPE_IMAGE_MARGIN)
-            panel_width, _ = self.panel.GetSize()
+            panel_width, panel_height = self.panel.GetSize()
             columns = panel_width / (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN)
+            rows = panel_height / (max_shape_height + 2*_SHAPE_IMAGE_MARGIN)
             hierarchy = self.data.current_hierarchy.linearise_hierarchy()
             sizer.SetCols(columns)
-            sizer.Add(self.blank_panel(shape_panel_size))
-            for i in range(1, min(columns - 1, len(hierarchy)) + 1):
-                sizer.Add(self.enumerative_panel(i, shape_panel_size, True), 0, wx.EXPAND)
-            
-            for i in range(1, sizer.GetCols() - min(columns - 1, len(hierarchy))):
-                sizer.Add(self.blank_panel(shape_panel_size), 0, wx.EXPAND)
+            self.enumerative_panel_line(sizer, shape_panel_size, min(columns - 1, len(hierarchy)))
             
             i = columns
             row = 1
             for shape in hierarchy:
                 if i == columns:
                     i = 1
-                    sizer.Add(self.enumerative_panel(row, shape_panel_size))
                     row += 1
+                    if row % rows == 0:
+                        self.enumerative_panel_line(sizer, shape_panel_size, min(columns - 1, len(hierarchy)))
+                    sizer.Add(self.enumerative_panel(row - 1, shape_panel_size))
                 i += 1 
                 shapepanel = _ShapePanel(parent = self.panel, shape = shape, shapes_panel = self, size = shape_panel_size)
                 if self.data.current_shape == shape:
                     preselected_panel = shapepanel
-                
                 sizer.Add(shapepanel, 0, wx.EXPAND)
                 self.shape_panels.append(shapepanel)
                 self._shape_panels_by_enum[(enum_to_letter(row - 1), enum_to_letter(i - 1, True))] = shapepanel

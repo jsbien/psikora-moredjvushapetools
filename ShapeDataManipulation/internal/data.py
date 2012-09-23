@@ -147,8 +147,9 @@ class ShapeData:
             return self._hierarchy_for_shape(shape.parent)
     
     def sorted_hierarchies(self, sorting_method):
-        if self.hierarchy_sorting_method != sorting_method:
-            self.hierarchy_sorting_method = sorting_method
+        #if self.hierarchy_sorting_method != sorting_method:
+        if True:
+            #self.hierarchy_sorting_method = sorting_method
             if sorting_method is None:
                 self.shape_hierarchies.sort(key = lambda hierarchy: hierarchy.db_id)
             elif sorting_method == 'count':

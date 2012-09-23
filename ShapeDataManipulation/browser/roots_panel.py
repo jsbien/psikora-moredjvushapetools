@@ -52,16 +52,22 @@ class RootPanel(wx.Panel):
         self.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
         shapeImage.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
         imagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnChooseThisShape)
+        self.deselect()
+            
         self.width = max(info.GetSize()[0],imagePanel.GetSize()[0]) + 10 
         
     def OnChooseThisShape(self, event):
         self.select()
 
     def deselect(self):
-        self.SetBackgroundColour(wx.NullColor)
-        
+        if self.shape.label is not None:
+            self.SetBackgroundColour('#66EE00')
+            #imagePanel.SetBackgroundColour('#66EE00')
+        else:
+            self.SetBackgroundColour(wx.NullColor)
+            #imagePanel.SetBackgroundColour(wx.NullColor)
     def select(self):
-        self.SetBackgroundColour('#00ff00')
+        self.SetBackgroundColour("Blue")
         self.roots_widget.data.current_hierarchy = self.shape
         self.roots_widget.data.current_shape = self.shape
         if self.roots_widget.currently_selected_subpanel is not None:
@@ -96,14 +102,25 @@ class RootsPanel(wx.Panel):
                           'end': self.last_root,
                           'prev': self.prev_root,
                           'prevscr': self.prev_scroll_roots,
-                          'home': self.first_root}
-        self._button_tooltips = {'next' : u'Pokaż następną hierarchię.',
+                          'home': self.first_root,
+                          'next_todo' : self.next_unlabeled,
+                          'prev_todo' : self.prev_unlabeled,
+                          'first_todo' : self.home_unlabeled,
+                          'last_todo' : self.end_unlabeled,
+                          }
+        self._button_tooltips = {
+                          'next' : u'Pokaż następną hierarchię.',
                           'nextscr': u'Przewiń hierarchie tak, by pierwszą widoczną była następna po obecnie wyświetlanych.',
                           'end': u'Pokaż ostatnią hierarchię.',
                           'prev': u'Pokaż poprzednią hierarchię.',
                           'prevscr': u'Przewiń hierarchie tak, by ostatnią widoczną była poprzednia przed obecnie wyświetlanymi.',
-                          'home': u'Pokaż pierwszą hierarchię.'}
-        for button_name in ['next', 'nextscr', 'end', 'prev', 'prevscr', 'home']:
+                          'home': u'Pokaż pierwszą hierarchię.',
+                          'next_todo' : u'Pokaż następną niewidoczną i niezaetykietowną hierarchię.',
+                          'prev_todo' : u'Pokaż poprzednią niewidoczną i niezaetykietowaną hierarchię.',
+                          'last_todo' : u'Pokaż ostatnią niezaetykietowną hierarchię.',
+                          'first_todo' : u'Pokaż pierwszą niezaetykietowaną hierarchię.'
+                          }
+        for button_name in self._bindings.keys():
             
             image_path = os.path.join(__SCRIPT_PATH__, "resource", button_name + '.png')            
             image = wx.Image(image_path, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
@@ -113,20 +130,64 @@ class RootsPanel(wx.Panel):
             tooltip = wx.ToolTip(self._button_tooltips[button_name])
             self.buttons[button_name].SetToolTip(tooltip)
             self.buttons[button_name].Bind(wx.EVT_BUTTON, self._bindings[button_name])
-        for button_name in ['home', 'prevscr', 'prev']:
-            sizer.Add(self.buttons[button_name], 0, wx.ALIGN_CENTER | wx.EXPAND) 
+        for button_names in [('home','first_todo'), ('prevscr','prev_todo'), ('prev',)]:
+            if len(button_names) == 1:
+                sizer.Add(self.buttons[button_names[0]], 0, wx.ALIGN_CENTER | wx.EXPAND)
+            else: # len(button_names) == 2
+                pair_sizer = wx.BoxSizer(wx.VERTICAL)
+                pair_sizer.Add(self.buttons[button_names[0]],1, wx.EXPAND)
+                pair_sizer.AddSpacer((2,2))
+                pair_sizer.Add(self.buttons[button_names[1]],1, wx.EXPAND)
+                sizer.Add(pair_sizer, 0, wx.ALIGN_CENTER | wx.EXPAND)
         self.inner = wx.lib.scrolledpanel.ScrolledPanel(self)
         sizer.Add(self.inner, 1, wx.EXPAND | wx.ALL, 1)
-        for button_name in ['next', 'nextscr', 'end']:
-            sizer.Add(self.buttons[button_name], 0, wx.ALIGN_CENTER | wx.EXPAND)
-
+        for button_names in [('next',), ('nextscr','next_todo'), ('end','last_todo')]:
+            if len(button_names) == 1:
+                sizer.Add(self.buttons[button_names[0]], 0, wx.ALIGN_CENTER | wx.EXPAND)
+            else: # len(button_names) == 2
+                pair_sizer = wx.BoxSizer(wx.VERTICAL)
+                pair_sizer.Add(self.buttons[button_names[0]],1, wx.EXPAND)
+                pair_sizer.AddSpacer((2,2))
+                pair_sizer.Add(self.buttons[button_names[1]],1, wx.EXPAND)
+                sizer.Add(pair_sizer, 0, wx.ALIGN_CENTER | wx.EXPAND)
         self.SetSizer(sizer, True)
         self.currently_selected_subpanel = None
 
+    def next_unlabeled(self, event):
+        index = self.visible_index
+        for root_panel in self.root_panels[self.visible_index + 1:]:
+            if root_panel.shape.label is None:
+                index = self.root_panels.index(root_panel)
+                break
+        self.compute_root_visibility(index)
+    
+    def prev_unlabeled(self, event):
+        index = self.visible_index
+        for root_panel in reversed(self.root_panels[:self.visible_index]):
+            if root_panel.shape.label is None:
+                index = self.root_panels.index(root_panel)
+                break
+        self.compute_root_visibility(index)
+    
+    def home_unlabeled(self, event):
+        index = self.visible_index
+        for root_panel in self.root_panels:
+            if root_panel.shape.label is None:
+                index = self.root_panels.index(root_panel)
+                break
+        self.compute_root_visibility(index)
+
+    def end_unlabeled(self, event):
+        index = self.visible_index
+        for root_panel in reversed(self.root_panels):
+            if root_panel.shape.label is None:
+                index = self.root_panels.index(root_panel)
+                break
+        self.compute_root_visibility(index)
         
     def next_root(self, event):
         index = min(self.max_index, self.visible_index + 1)
-        self.compute_root_visibility(self.visible_index+1)
+        self.compute_root_visibility(index)
 
     def next_scroll_roots(self, event):
         index = min(self.max_index, self.visible_index + len(self.visible_panels))
@@ -163,21 +224,27 @@ class RootsPanel(wx.Panel):
         self.inner.Refresh()
         self.inner.Update()
     
-    def regenerate(self):
+    def regenerate(self, hierarchy_to_select = None):
         self.currently_selected_subpanel = None
         self.visible_index = 0
-        self.max_index = len(self.data.sorted_hierarchies(self.sorting_method)) - 1
+        self.max_index = len(self.data.shape_hierarchies) - 1
         self.inner_sizer = sizer = wx.BoxSizer(wx.HORIZONTAL)
         for panel in self.root_panels:
             panel.Destroy()
         
         self.root_panels = []
         self.visible_panels = []
+        panel_to_select = None
         for hierarchy_root in self.data.sorted_hierarchies(self.sorting_method):
             panel = RootPanel(parent = self.inner, shape = hierarchy_root, main_widget = self)
+            if hierarchy_root == hierarchy_to_select:
+                panel_to_select = panel
             self.root_panels.append(panel)
             sizer.Add(panel, 0, wx.ALIGN_TOP | wx.EXPAND)
             panel.Hide()
+        if panel_to_select is not None:
+            panel_to_select.select()
+            self.visible_index = self.root_panels.index(panel_to_select)
         sizer.AddStretchSpacer()
         self.inner.SetSizer(sizer, True)
         self.inner.SetupScrolling(scroll_x = False)
