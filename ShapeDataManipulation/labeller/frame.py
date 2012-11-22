@@ -193,6 +193,7 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                     self.data_hocr.add_page(page_no, hocr_page)
                     hocr_status += str(page_no) + ' '
             if self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]):
+                self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]) #let's try it again, for the benefit of display bug
                 status += " Otwarto plik z dokumentem. "
             else:#inform of failure
                 msg = wx.MessageDialog(self, u"Nie udało się otworzyć pliku .djvu dla dokumentu " + doc_name.split(os.sep)[-1],

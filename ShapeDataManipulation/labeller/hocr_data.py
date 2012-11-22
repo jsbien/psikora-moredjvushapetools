@@ -251,6 +251,7 @@ class TextModel(djvusmooth.models.text.Text):
         self[self.current_page].current_char = self._current_char
         if self[self.current_page].current_char_node.shapes:
             self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
+            print("Current hOCR node intersects with " + str(len(self[self.current_page].current_char_node.shapes)) + " shapes")
             self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
         else:
             self.data.current_shape = None
