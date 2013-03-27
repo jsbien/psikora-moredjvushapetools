@@ -266,7 +266,7 @@ class ShapesPanel(wx.Panel):
             shape_panel_size = (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN, max_shape_height + 2*_SHAPE_IMAGE_MARGIN)
             panel_width, panel_height = self.panel.GetSize()
             columns = panel_width / (max_shape_width + 2 * _SHAPE_IMAGE_MARGIN)
-            rows = panel_height / (max_shape_height + 2*_SHAPE_IMAGE_MARGIN)
+            rows = max(1, panel_height / (max_shape_height + 2*_SHAPE_IMAGE_MARGIN))
             hierarchy = self.data.current_hierarchy.linearise_hierarchy()
             sizer.SetCols(columns)
             self.enumerative_panel_line(sizer, shape_panel_size, min(columns - 1, len(hierarchy)))
