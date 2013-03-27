@@ -149,32 +149,32 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.labelling_panel.regenerate()
         
     def OnPrevCharCommit(self, event):
-        self.labelling_panel.save_label()
-        self.OnPrevChar(event)
+        if self.labelling_panel.save_label():
+            self.OnPrevChar(event)
         
     def OnPrevCharToLabel(self, event):
         self.data_hocr.next_shape(previous = True, find_unlabeled = True)
         self.labelling_panel.regenerate()
         
     def OnPrevCharToLabelCommit(self, event):
-        self.labelling_panel.save_label()
-        self.OnPrevCharToLabel(event)
+        if self.labelling_panel.save_label():        
+            self.OnPrevCharToLabel(event)
         
     def OnNextChar(self, event):
         self.data_hocr.next_shape()
         self.labelling_panel.regenerate()
         
     def OnNextCharCommit(self, event):
-        self.labelling_panel.save_label()
-        self.OnNextChar(event)
+        if self.labelling_panel.save_label():
+            self.OnNextChar(event)
         
     def OnNextCharToLabel(self, event):
         self.data_hocr.next_shape(find_unlabeled = True)
         self.labelling_panel.regenerate()
         
     def OnNextCharToLabelCommit(self, event):
-        self.labelling_panel.save_label()
-        self.OnNextCharToLabel(event)
+        if self.labelling_panel.save_label():
+            self.OnNextCharToLabel(event)
         
     def load_hocr_data(self):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")

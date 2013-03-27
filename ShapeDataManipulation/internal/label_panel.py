@@ -322,7 +322,7 @@ class LabelPanel(wx.Panel):
 
     def OnSaveChanges(self, event):
         self.save_changes()
-       
+
     def save_changes(self):
         if 'textel' in self._items:
             characters = self._items['textel'].GetValue()
@@ -384,3 +384,11 @@ class LabelPanel(wx.Panel):
                 
             self.data.db_manipulator.commit()
             self.dirty = False
+
+    def is_label_properly_filled(self):
+        if self._items['noise'].GetValue():
+            return True
+        for font_trait in _font_traits:
+            if self._comboboxes[font_trait].GetValue().strip() == '':
+                return False
+        return True

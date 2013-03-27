@@ -78,7 +78,13 @@ class LabellingPanel(wx.Panel):
         #return self.line_edit.GetStringSelection()
         return self.line_edit.GetValue()
     
+    def temporary_status(self, text):
+        return self.GetParent().temporary_status(text)
+    
     def save_label(self):
+        if not self.label.is_label_properly_filled():
+            wx.MessageBox('Nie można zatwierdzić etykiety z niewypełnionymi rubrykami!', 'Uwaga!',  wx.OK | wx.ICON_EXCLAMATION)
+            return False
         characters = self.get_selected_character()
         if self._dirty_label:
             if len(characters) > 1:
@@ -92,6 +98,7 @@ class LabellingPanel(wx.Panel):
                 self.dirty_hocr[self.data_hocr.text_model.current_page] = True
         if len(characters) == 1:
             self.label.save_label(characters)
+        return True
         
     def OnNextLine(self, event):
         self.data_hocr.text_model.next_line()
