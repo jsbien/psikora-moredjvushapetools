@@ -73,7 +73,6 @@ class DjVuShapeToolsFrame(wx.Frame):
         self._menu_strings = strings.menu
         self._app_data = strings.app_data
         self._app_data['AppName']=  self.GetTitle()
-        self._temporary_status = ''
          
     def on_about(self, event):
         message = self._app_data.get('AppName', '') + ' ' + self._app_data.get('AppVersion','') + '\n'
@@ -108,7 +107,7 @@ class DjVuShapeToolsFrame(wx.Frame):
         if self.data.current_document is not None:
             self.data.shape_dictionaries = self.db_manipulator.fetch_dictionaries(self.data.current_document.db_id)
             self.data.pages = self.db_manipulator.fetch_pages(self.data.current_document.db_id)
-            self.statusbar.SetStatusText("Dane dokumentu: " + str(self.data.current_document.address) + " zostały wczytane z bazy. ")
+
         #reset data after document change
         if self.data.current_document != previous_document:
             self.data.current_dictionary = None
@@ -120,10 +119,10 @@ class DjVuShapeToolsFrame(wx.Frame):
         #TODO: use Observers to observe when document changes (or at least check for change here)
 
     def temporary_status(self, text):
-        status = self.statusbar.GetStatusText()
-        status = status[ : len(status) - len(self._temporary_status)]
-        self._temporary_status = text
-        self.statusbar.SetStatusText(status + text)
+        self.update_status(text)
+        
+    def update_status(self, text = ''):
+        self.statusbar.SetStatusText(u'Otwarty dokument: ' + str(self.data.current_document.address) + ' ' + text)
 
     def OnChooseDictionary(self, event):
         self.choose_dictionary()

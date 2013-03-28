@@ -116,6 +116,19 @@ class hOCRLabeller(DjVuShapeToolsFrame):
         self.Centre()
         self.Show(True)
     
+    def update_status(self, text = ''):
+        DjVuShapeToolsFrame.update_status(self, text)
+        status = self.statusbar.GetStatusText()
+        #hocr labeller only status tekst.
+        hocr_status = []
+        if self.data_hocr.hocr_pages.keys():
+            for page in self.data_hocr.hocr_pages.keys():
+                hocr_status.append(str(page))
+            status = u" Załadowano hOCR dla stron: " + ' '.join(hocr_status) + ' ' + status               
+        else:
+            status = u" Nie załadowano hOCR dla żadnej strony. " + status
+        self.statusbar.SetStatusText(status)
+    
     def OnLabellerExit(self, event):
         if self.labelling_panel.dirty_hocr:
             print("Saving hOCR files...")
@@ -179,10 +192,6 @@ class hOCRLabeller(DjVuShapeToolsFrame):
     def load_hocr_data(self):
         path = self.open_directory("Wybierz katalog z dokumentem i danymi hOCR")
         doc_name = self.data.current_document.name
-        
-        status = self.statusbar.GetStatusText()
-        hocr_status = ''
-        
         if path is not None:
             listing = os.listdir(path)
             for filename in listing:
@@ -191,20 +200,15 @@ class hOCRLabeller(DjVuShapeToolsFrame):
                     page_no, hocr_page = page_data
                     self._hocr_filepaths.append((page_no, path + os.sep + filename))
                     self.data_hocr.add_page(page_no, hocr_page)
-                    hocr_status += str(page_no) + ' '
             if self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]):
                 self.open_djvu_file(path + os.sep + doc_name.split(os.sep)[-1]) #let's try it again, for the benefit of display bug
-                status += " Otwarto plik z dokumentem. "
+                
             else:#inform of failure
                 msg = wx.MessageDialog(self, u"Nie udało się otworzyć pliku .djvu dla dokumentu " + doc_name.split(os.sep)[-1],
                                         "Uwaga", wx.OK | wx.ICON_WARNING)
                 msg.ShowModal()
                 msg.Destroy()
-        if hocr_status == '':
-            status += u" Nie załadowano hOCR dla żadnej strony. "
-        else:
-            status += u" Załadowano hOCR dla stron: " + hocr_status
-        self.statusbar.SetStatusText(status)
+        self.update_status()
     
     def save_hocr_data(self):
         try:
