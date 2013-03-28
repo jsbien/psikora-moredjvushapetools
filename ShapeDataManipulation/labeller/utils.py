@@ -18,7 +18,6 @@
 '''
 from ocrodjvu import hocr
 from ocrodjvu.errors import MalformedHocr
-import sys
 from os import sep
 import unicodedata
 
@@ -58,6 +57,7 @@ class Rect:
         self.h = height
         self.x_end = x + width
         self.y_end = y + height
+        self.size = abs(self.x_end - self.x) * abs(self.y_end - self.y) 
     
     def center(self):
         center_x = (self.x + self.x_end) / 2
@@ -68,6 +68,14 @@ class Rect:
         #returns true if this rectangle intersects with another one
         return (self.x <= other.x_end and self.x_end >= other.x and
                 self.y <= other.y_end and self.y_end >= other.y)
+
+    def coverage_percent(self, covering_rect, reverse = False):
+        covered_part = max(0, min(self.x_end, covering_rect.x_end) - max(self.x, covering_rect.x)) * \
+                        max(0, min(self.y_end, covering_rect.y_end) - max(self.y, covering_rect.y))
+        denominator = float(covering_rect.size if reverse else self.size)
+        if denominator == 0.0:
+            return 100.0
+        return 100 * float(covered_part)/denominator
 
     def __str__(self):
         return "Rectangle at " + str(self.x) + ", " + str(self.y) + " w, h: " + str(self.w) + ", " + str(self.h)

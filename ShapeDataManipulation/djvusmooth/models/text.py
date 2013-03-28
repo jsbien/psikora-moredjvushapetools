@@ -54,6 +54,7 @@ class Node(object):
         self._link_left = self._link_right = self._link_parent = wref(None)
         self.shapes = []
         self.blits = []
+        self.shape_selected = False
         
     @property
     def sexpr(self):

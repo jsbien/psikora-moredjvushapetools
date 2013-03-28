@@ -19,6 +19,7 @@
 
 import djvusmooth.models.text
 import djvu.const
+from operator import itemgetter, attrgetter
 
 
 from utils import Rect, log
@@ -237,6 +238,23 @@ class TextModel(djvusmooth.models.text.Text):
                 pos += len(node.text)
         return None
 
+    def select_shape(self, node):
+        if not node.shape_selected:
+            node_rect = Rect(*node.rect)
+            shapes_by_coverage_and_size = {}
+            for i in range(len(node.shapes)):
+                blit = node.blits[i]
+                shapes_by_coverage_and_size[(blit.coverage_percent(node_rect), blit.size)] = (node.shapes[i], blit)
+            shapes = []
+            blits = []
+            for shape_key in sorted(shapes_by_coverage_and_size.keys(), key=itemgetter(0,1), reverse = True):
+                shapes.append(shapes_by_coverage_and_size[shape_key][0])
+                blits.append(shapes_by_coverage_and_size[shape_key][1])
+            node.shapes = shapes
+            node.blits = blits
+            node.shape_selected = True
+        return node.shapes[0]
+    
     def _get_current_char(self):
         return self._current_char
     def _set_current_char(self, value):
@@ -250,8 +268,8 @@ class TextModel(djvusmooth.models.text.Text):
             self.at_limit = False
         self[self.current_page].current_char = self._current_char
         if self[self.current_page].current_char_node.shapes:
-            self.data.current_shape = self[self.current_page].current_char_node.shapes[0]
-            print("Current hOCR node intersects with " + str(len(self[self.current_page].current_char_node.shapes)) + " shapes")
+            self.data.current_shape = self.select_shape(self[self.current_page].current_char_node)
+           # print("Current hOCR node intersects with " + str(len(self[self.current_page].current_char_node.shapes)) + " shapes")
             self.data.select_hierarchy_for_current_shape() #TODO: needs to handle multiple shapes
         else:
             self.data.current_shape = None
